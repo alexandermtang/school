@@ -1,10 +1,10 @@
 CC=gcc
-CFLAGS = -Wall -o
+CFLAGS = -Wall -g -o
 
 build: main.c
 		$(CC) $(CFLAGS) sl main.c
 		ar rv libsl.a sl
 
 clean:
-		rm -rf *.o
+		-rm -rf *.o sl
 

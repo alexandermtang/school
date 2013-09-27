@@ -6,24 +6,12 @@
 
 #include <stdlib.h>
 
-/*
- * Sorted list type.  You need to fill in the type as part of your implementation.
- */
-struct SortedList
+typedef struct Node* NodePtr;
+typedef struct Node
 {
-};
-typedef struct SortedList* SortedListPtr;
-
-
-/*
- * Iterator type for user to "walk" through the list item by item, from
- * beginning to end.  You need to fill in the type as part of your implementation.
- */
-struct SortedListIterator
-{
-};
-typedef struct SortedListIterator* SortedListIteratorPtr;
-
+  void *data;
+  NodePtr next;
+} Node;
 
 /*
  * When your sorted list is used to store objects of some type, since the
@@ -41,19 +29,48 @@ typedef struct SortedListIterator* SortedListIteratorPtr;
 
 typedef int (*CompareFuncT)(void *, void *);
 
+/*
+ * Sorted list type.  You need to fill in the type as part of your implementation.
+ */
+typedef struct SortedList
+{
+  size_t size;
+  NodePtr front;
+  CompareFuncT cf;
+} SortedList;
+typedef struct SortedList* SortedListPtr;
+
+/*
+ * Iterator type for user to "walk" through the list item by item, from
+ * beginning to end.  You need to fill in the type as part of your implementation.
+ */
+struct SortedListIterator
+{
+};
+typedef struct SortedListIterator* SortedListIteratorPtr;
+
+
+
 
 /*
  * SLCreate creates a new, empty sorted list.  The caller must provide
  * a comparator function that can be used to order objects that will be
  * kept in the list.
- * 
+ *
  * If the function succeeds, it returns a (non-NULL) SortedListT object.
  * Else, it returns NULL.
  *
  * You need to fill in this function as part of your implementation.
  */
 
-SortedListPtr SLCreate(CompareFuncT cf);
+SortedListPtr SLCreate(CompareFuncT cf)
+{
+  SortedListPtr slp = (SortedListPtr)malloc(sizeof(SortedList));
+  slp->front = NULL;
+  slp->size = 0;
+  slp->cf = cf;
+  return slp;
+}
 
 /*
  * SLDestroy destroys a list, freeing all dynamically allocated memory.
@@ -74,7 +91,20 @@ void SLDestroy(SortedListPtr list);
  * You need to fill in this function as part of your implementation.
  */
 
-int SLInsert(SortedListPtr list, void *newObj);
+int SLInsert(SortedListPtr list, void *newObj)
+{
+  if (list->size == 0)
+  {
+    NodePtr front = (NodePtr)malloc(sizeof(Node));
+    front->data = newObj;
+    front->next = NULL;
+
+    list->front = front;
+    list->size++;
+    return 1;
+  }
+  return 0;
+}
 
 
 /*

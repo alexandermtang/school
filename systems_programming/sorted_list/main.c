@@ -3,6 +3,7 @@
  */
 
 #include	<string.h>
+#include	<stdio.h>
 #include	"sorted-list.h"
 
 int compareInts(void *p1, void *p2)
@@ -31,4 +32,10 @@ int compareStrings(void *p1, void *p2)
 
 int main()
 {
+  SortedListPtr slp = SLCreate(compareInts);
+  int x = 5;
+  SLInsert(slp, (void*)&x);
+
+  printf("hello: %d\n", *(int*)slp->front->data);
+  return 0;
 }
