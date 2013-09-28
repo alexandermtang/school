@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <string.h>
 #include "sorted-list.h"
 
 /*
@@ -174,7 +173,6 @@ int SLRemove(SortedListPtr list, void *newObj)
 
 SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
     SortedListIteratorPtr slip = (SortedListIteratorPtr) malloc(sizeof(SortedListIterator));
-    slip->slPtr = list;
     if (list->size == 0) {
         slip->ptr = NULL;
     } else {

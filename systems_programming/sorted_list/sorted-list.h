@@ -10,6 +10,7 @@ typedef struct Node* NodePtr;
 typedef struct Node {
     void *data;
     NodePtr next;
+    NodePtr iterPtr;
 } Node;
 
 /*
@@ -44,7 +45,6 @@ typedef struct SortedList* SortedListPtr;
  */
 typedef struct SortedListIterator {
     NodePtr       ptr;
-    SortedListPtr slPtr;
 } SortedListIterator;
 typedef struct SortedListIterator* SortedListIteratorPtr;
 
