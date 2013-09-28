@@ -77,7 +77,19 @@ SortedListPtr SLCreate(CompareFuncT cf)
  *
  * You need to fill in this function as part of your implementation.
  */
-void SLDestroy(SortedListPtr list);
+void SLDestroy(SortedListPtr list) {
+    if (list->size == 0) {
+        return;
+    }
+    NodePtr prevPtr = NULL;
+    NodePtr ptr     = list->front;
+    while (ptr != NULL) {
+        prevPtr = ptr;
+        ptr = ptr->next;
+        free(prevPtr);
+    }
+    free(list);
+};
 
 
 /*
