@@ -36,9 +36,9 @@ int main()
   SortedListPtr slp = SLCreate(compareInts);
   int i;
   for (i = 0; i < 100; i+=10) {
-    int num = rand();
-    printf("Insert %d\n", i);
-    SLInsert(slp, (void*)&i);
+    int num = rand() % 100;
+    printf("Insert %d\n", num);
+    SLInsert(slp, (void*)&num);
   }
 
   /*printf("Item 1 %d\n", *(int*)slp->front->data);*/
