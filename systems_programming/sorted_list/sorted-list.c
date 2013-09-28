@@ -37,7 +37,6 @@ void SLDestroy(SortedListPtr list)
     while (ptr != NULL) {
         prevPtr = ptr;
         ptr = ptr->next;
-        free(prevPtr->data);
         free(prevPtr);
     }
     free(list);
@@ -59,8 +58,7 @@ int SLInsert(SortedListPtr list, void *newObj)
 {
     // Initialize node to be inserted
     NodePtr newNode = (NodePtr) malloc(sizeof(Node));
-    newNode->data = malloc(sizeof(void));
-    memcpy(newNode->data, newObj, sizeof(void));
+    newNode->data = newObj;
 
     // Insert at beginning if list is empty
     if (list->size == 0) {
@@ -93,20 +91,20 @@ int SLInsert(SortedListPtr list, void *newObj)
             return 1;
         }
 
+        // Insert at end of list
+        if (compare < 0 && nextPtr == NULL) {
+            newNode->next = NULL;
+            ptr->next     = newNode;
+            list->size++;
+            return 1;
+        }
+
         // Insert somewhere in middle of list
         void* nextData  = nextPtr->data;
         int compareNext = list->cf(newObj, nextData);
         // if newObj less than current and bigger than next, insert after ptr
         if (compare < 0 && compareNext > 0) {
             newNode->next = nextPtr;
-            ptr->next     = newNode;
-            list->size++;
-            return 1;
-        }
-
-        // Insert at end of list
-        if (compare < 0 && nextPtr == NULL) {
-            newNode->next = NULL;
             ptr->next     = newNode;
             list->size++;
             return 1;
