@@ -1,58 +1,5 @@
-#ifndef SORTED_LIST_H
-#define SORTED_LIST_H
-/*
- * sorted-list.h
- */
-
 #include <stdlib.h>
-
-typedef struct Node* NodePtr;
-typedef struct Node
-{
-    void *data;
-    NodePtr next;
-} Node;
-
-/*
- * When your sorted list is used to store objects of some type, since the
- * type is opaque to you, you will need a comparator function to order
- * the objects in your sorted list.
- *
- * You can expect a comparator function to return -1 if the 1st object is
- * smaller, 0 if the two objects are equal, and 1 if the 2nd object is
- * smaller.
- *
- * Note that you are not expected to implement any comparator functions.
- * You will be given a comparator function when a new sorted list is
- * created.
- */
-
-typedef int (*CompareFuncT)(void *, void *);
-
-/*
- * Sorted list type.  You need to fill in the type as part of your implementation.
- */
-typedef struct SortedList
-{
-    size_t       size;
-    NodePtr      front;
-    CompareFuncT cf;
-} SortedList;
-typedef struct SortedList* SortedListPtr;
-
-/*
- * Iterator type for user to "walk" through the list item by item, from
- * beginning to end.  You need to fill in the type as part of your implementation.
- */
-typedef struct SortedListIterator
-{
-    NodePtr ptr;
-    SortedListPtr slp;
-} SortedListIterator;
-typedef struct SortedListIterator* SortedListIteratorPtr;
-
-
-
+#include "sorted-list.h"
 
 /*
  * SLCreate creates a new, empty sorted list.  The caller must provide
@@ -72,7 +19,7 @@ SortedListPtr SLCreate(CompareFuncT cf)
     slp->size = 0;
     slp->cf = cf;
     return slp;
-}
+};
 
 /*
  * SLDestroy destroys a list, freeing all dynamically allocated memory.
@@ -124,7 +71,7 @@ int SLInsert(SortedListPtr list, void *newObj)
     while (ptr != NULL) {
         void* nodeData = ptr->data;
         int compare = list->cf(newObj, nodeData);
-        if (compare < 0 && prevPtr == NULL) {
+        if (compare > 0 && prevPtr == NULL) {
             NodePtr newNode = (NodePtr) malloc(sizeof(Node));
             newNode->data   = newObj;
             newNode->next   = ptr;
@@ -138,7 +85,7 @@ int SLInsert(SortedListPtr list, void *newObj)
             ptr->next       = newNode;
             list->size++;
             return 1;
-        } else if (compare > 0 && nextPtr == NULL) { // End of the list
+        } else if (compare < 0 && nextPtr == NULL) { // End of the list
             NodePtr newNode = (NodePtr) malloc(sizeof(Node));
             newNode->data   = newObj;
             newNode->next   = NULL;
@@ -150,7 +97,7 @@ int SLInsert(SortedListPtr list, void *newObj)
         void* nextData  = nextPtr->data;
         int compareNext = list->cf(newObj, nextData);
         
-        if (compare > 0 && compareNext < 0) {
+        if (compare < 0 && compareNext > 0) {
             NodePtr newNode = (NodePtr) malloc(sizeof(Node));
             newNode->data   = newObj;
             newNode->next   = nextPtr;
@@ -165,7 +112,7 @@ int SLInsert(SortedListPtr list, void *newObj)
     }
     
     return 0;
-}
+};
 
 
 /*
@@ -269,5 +216,3 @@ void *SLNextItem(SortedListIteratorPtr iter) {
         return nodeData;
     }
 };
-
-#endif

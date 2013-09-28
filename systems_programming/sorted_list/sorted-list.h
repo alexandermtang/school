@@ -9,8 +9,8 @@
 typedef struct Node* NodePtr;
 typedef struct Node
 {
-  void *data;
-  NodePtr next;
+    void *data;
+    NodePtr next;
 } Node;
 
 /*
@@ -34,9 +34,9 @@ typedef int (*CompareFuncT)(void *, void *);
  */
 typedef struct SortedList
 {
-  size_t size;
-  NodePtr front;
-  CompareFuncT cf;
+    size_t       size;
+    NodePtr      front;
+    CompareFuncT cf;
 } SortedList;
 typedef struct SortedList* SortedListPtr;
 
@@ -44,11 +44,12 @@ typedef struct SortedList* SortedListPtr;
  * Iterator type for user to "walk" through the list item by item, from
  * beginning to end.  You need to fill in the type as part of your implementation.
  */
-struct SortedListIterator
+typedef struct SortedListIterator
 {
-};
+    NodePtr ptr;
+    SortedListPtr slp;
+} SortedListIterator;
 typedef struct SortedListIterator* SortedListIteratorPtr;
-
 
 
 
@@ -63,14 +64,7 @@ typedef struct SortedListIterator* SortedListIteratorPtr;
  * You need to fill in this function as part of your implementation.
  */
 
-SortedListPtr SLCreate(CompareFuncT cf)
-{
-  SortedListPtr slp = (SortedListPtr)malloc(sizeof(SortedList));
-  slp->front = NULL;
-  slp->size = 0;
-  slp->cf = cf;
-  return slp;
-}
+SortedListPtr SLCreate(CompareFuncT cf);
 
 /*
  * SLDestroy destroys a list, freeing all dynamically allocated memory.
@@ -91,20 +85,7 @@ void SLDestroy(SortedListPtr list);
  * You need to fill in this function as part of your implementation.
  */
 
-int SLInsert(SortedListPtr list, void *newObj)
-{
-  if (list->size == 0)
-  {
-    NodePtr front = (NodePtr)malloc(sizeof(Node));
-    front->data = newObj;
-    front->next = NULL;
-
-    list->front = front;
-    list->size++;
-    return 1;
-  }
-  return 0;
-}
+int SLInsert(SortedListPtr list, void *newObj);
 
 
 /*
