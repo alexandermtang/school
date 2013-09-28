@@ -59,34 +59,14 @@ typedef struct SortedListIterator* SortedListIteratorPtr;
  * You need to fill in this function as part of your implementation.
  */
 
-SortedListPtr SLCreate(CompareFuncT cf)
-{
-    SortedListPtr slPtr = (SortedListPtr)malloc(sizeof(SortedList));
-    slPtr->front = NULL;
-    slPtr->size  = 0;
-    slPtr->cf    = cf;
-    return slPtr;
-}
+SortedListPtr SLCreate(CompareFuncT cf);
 
 /*
  * SLDestroy destroys a list, freeing all dynamically allocated memory.
  *
  * You need to fill in this function as part of your implementation.
  */
-void SLDestroy(SortedListPtr list)
-{
-    if (list->size == 0) {
-        return;
-    }
-    NodePtr prevPtr = NULL;
-    NodePtr ptr     = list->front;
-    while (ptr != NULL) {
-        prevPtr = ptr;
-        ptr = ptr->next;
-        free(prevPtr);
-    }
-    free(list);
-};
+void SLDestroy(SortedListPtr list);
 
 
 /*
@@ -100,71 +80,7 @@ void SLDestroy(SortedListPtr list)
  * You need to fill in this function as part of your implementation.
  */
 
-int SLInsert(SortedListPtr list, void *newObj)
-{
-    // Initialize node to be inserted
-    NodePtr newNode = (NodePtr)malloc(sizeof(Node));
-    newNode->data = newObj;
-
-    // Insert at beginning if list is empty
-    if (list->size == 0) {
-        newNode->next = NULL;
-        list->front = newNode;
-        list->size++;
-        return 1;
-    }
-
-    NodePtr ptr     = list->front;
-    NodePtr nextPtr = ptr->next;
-    NodePtr prevPtr = NULL;
-    while (ptr != NULL) {
-        void* ptrData = ptr->data;
-        int compare = list->cf(newObj, ptrData);
-
-        // Insert at beginning of list
-        if (compare < 0 && prevPtr == NULL) {
-            newNode->next = ptr;
-            list->front   = newNode;
-            list->size++;
-            return 1;
-        }
-
-        // Insert new node after if same data
-        if (compare == 0) {
-            newNode->next = nextPtr;
-            ptr->next     = newNode;
-            list->size++;
-            return 1;
-        }
-
-        // Insert at end of list
-        if (compare > 0 && nextPtr == NULL) {
-            newNode->next = NULL;
-            ptr->next     = newNode;
-            list->size++;
-            return 1;
-        }
-
-        // Insert somewhere in middle of list
-        void* nextData  = nextPtr->data;
-        int compareNext = list->cf(newObj, nextData);
-        // newObj must be bigger than current and less than next
-        if (compare > 0 && compareNext < 0) {
-            newNode->next = nextPtr;
-            ptr->next     = newNode;
-            list->size++;
-            return 1;
-        }
-
-        prevPtr = ptr;
-        ptr     = ptr->next;
-        nextPtr = ptr->next;
-    }
-
-    // Fail to insert, free newNode
-    free(newNode);
-    return 0;
-}
+int SLInsert(SortedListPtr list, void *newObj);
 
 
 /*
@@ -176,36 +92,7 @@ int SLInsert(SortedListPtr list, void *newObj)
  * You need to fill in this function as part of your implementation.
  */
 
-int SLRemove(SortedListPtr list, void *newObj)
-{
-    if (list->size == 0) {
-        return 0;
-    }
-
-    NodePtr prevPtr = NULL;
-    NodePtr ptr     = list->front;
-    while (ptr != NULL) {
-        void* ptrData = ptr->data;
-        int compare = list->cf(newObj, ptrData);
-
-        if (compare == 0 && prevPtr == NULL) { // Remove first element
-            list->front = ptr->next;
-            free(ptr);
-            list->size--;
-            return 1;
-        } else if (compare == 0) {
-            prevPtr->next = ptr->next;
-            free(ptr);
-            list->size--;
-            return 1;
-        }
-
-        prevPtr = ptr;
-        ptr     = ptr->next;
-    }
-
-    return 0;
-};
+int SLRemove(SortedListPtr list, void *newObj);
 
 
 /*
@@ -218,16 +105,7 @@ int SLRemove(SortedListPtr list, void *newObj)
  * You need to fill in this function as part of your implementation.
  */
 
-SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
-    SortedListIteratorPtr slip = (SortedListIteratorPtr) malloc(sizeof(SortedListIterator));
-    slip->slPtr = list;
-    if (list->size == 0) {
-        slip->ptr = NULL;
-    } else {
-        slip->ptr = list->front;
-    }
-    return slip;
-};
+SortedListIteratorPtr SLCreateIterator(SortedListPtr list);
 
 
 /*
@@ -239,9 +117,7 @@ SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
  * You need to fill in this function as part of your implementation.
  */
 
-void SLDestroyIterator(SortedListIteratorPtr iter) {
-    free(iter);
-};
+void SLDestroyIterator(SortedListIteratorPtr iter);
 
 
 /*
@@ -259,16 +135,6 @@ void SLDestroyIterator(SortedListIteratorPtr iter) {
  * You need to fill in this function as part of your implementation.
  */
 
-void *SLNextItem(SortedListIteratorPtr iter) {
-
-    // TODO consider case where list is modified while iterating
-    if (iter->ptr == NULL) {
-        return NULL;
-    } else {
-        void* nodeData = iter->ptr->data;
-        iter->ptr = iter->ptr->next;
-        return nodeData;
-    }
-};
+void *SLNextItem(SortedListIteratorPtr iter);
 
 #endif

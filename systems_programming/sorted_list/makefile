@@ -1,12 +1,14 @@
 CC=gcc
 CFLAGS = -Wall -g -o
 
-build: main.c sorted-list.h
-		$(CC) $(CFLAGS) sl main.c
-		ar rv libsl.a sorted-list.h
+build:
+	ar rv libsl.a sorted-list.h sorted-list.c
+	$(CC) -c sorted-list.c -o sorted-list.o
+	$(CC) -c main.c -o main.o
+	$(CC) sorted-list.o main.o -o sl
 
 clean:
-		-rm -rf *.o sl libsl.a *.dSYM
+	-rm -rf *.o sl libsl.a *.dSYM
 
-rebuild: main.c sorted-list.h
-		make clean build
+rebuild:
+	make clean build

@@ -4,6 +4,7 @@
 
 #include	<string.h>
 #include	<stdio.h>
+#include	<stdlib.h>
 #include	"sorted-list.h"
 
 int compareInts(void *p1, void *p2)
@@ -33,9 +34,24 @@ int compareStrings(void *p1, void *p2)
 int main()
 {
   SortedListPtr slp = SLCreate(compareInts);
-  int x = 5;
-  SLInsert(slp, (void*)&x);
+  int i;
+  for (i = 0; i < 3; i++) {
+    int num = rand();
+    printf("Insert %d\n", num);
+    SLInsert(slp, (void*)&num);
+  }
 
-  printf("hello: %d\n", *(int*)slp->front->data);
+  printf("Item 1 %d\n", *(int*)slp->front->data);
+  printf("Item 2 %d\n", *(int*)slp->front->next->data);
+  printf("Item 3 %d\n", *(int*)slp->front->next->next->data);
+  /*printf("Item 4 %d\n", *(int*)slp->front->next->next->next->data);*/
+
+  SortedListIteratorPtr slip = SLCreateIterator(slp);
+  void* item;
+  i = 0;
+  while( (item = SLNextItem(slip)) != NULL) {
+    printf("Item %d: %d\n", i++, *(int*)item);
+  }
+
   return 0;
 }
