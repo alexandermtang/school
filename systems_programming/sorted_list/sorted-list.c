@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "sorted-list.h"
 
 /*
@@ -59,7 +60,8 @@ int SLInsert(SortedListPtr list, void *newObj)
 
     // Initialize node to be inserted
     NodePtr newNode = (NodePtr)malloc(sizeof(Node));
-    newNode->data = newObj;
+    newNode->data = malloc(sizeof(void));
+    memcpy(newNode->data, newObj, sizeof(void));
 
     // Insert at beginning if list is empty
     if (list->size == 0) {

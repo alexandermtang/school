@@ -35,15 +35,15 @@ int main()
 {
   SortedListPtr slp = SLCreate(compareInts);
   int i;
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < 100; i+=10) {
     int num = rand();
-    printf("Insert %d\n", num);
-    SLInsert(slp, (void*)&num);
+    printf("Insert %d\n", i);
+    SLInsert(slp, (void*)&i);
   }
 
-  printf("Item 1 %d\n", *(int*)slp->front->data);
-  printf("Item 2 %d\n", *(int*)slp->front->next->data);
-  printf("Item 3 %d\n", *(int*)slp->front->next->next->data);
+  /*printf("Item 1 %d\n", *(int*)slp->front->data);*/
+  /*printf("Item 2 %d\n", *(int*)slp->front->next->data);*/
+  /*printf("Item 3 %d\n", *(int*)slp->front->next->next->data);*/
   /*printf("Item 4 %d\n", *(int*)slp->front->next->next->next->data);*/
 
   SortedListIteratorPtr slip = SLCreateIterator(slp);
