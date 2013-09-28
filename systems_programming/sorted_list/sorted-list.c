@@ -44,9 +44,11 @@ typedef struct SortedList* SortedListPtr;
  * Iterator type for user to "walk" through the list item by item, from
  * beginning to end.  You need to fill in the type as part of your implementation.
  */
-struct SortedListIterator
+typedef struct SortedListIterator
 {
-};
+    NodePtr ptr;
+    SortedListPtr slp;
+} SortedListIterator;
 typedef struct SortedListIterator* SortedListIteratorPtr;
 
 
@@ -217,7 +219,16 @@ int SLRemove(SortedListPtr list, void *newObj)
  * You need to fill in this function as part of your implementation.
  */
 
-SortedListIteratorPtr SLCreateIterator(SortedListPtr list);
+SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
+    SortedListIteratorPtr slip = (SortedListIteratorPtr)malloc(sizeof(SortedListIterator));
+    slip->slp = list;
+    if (list->size == 0) {
+        slip->ptr = NULL;
+    } else {
+        slip->ptr = list->front;
+    }
+    return slip;
+};
 
 
 /*
@@ -229,7 +240,9 @@ SortedListIteratorPtr SLCreateIterator(SortedListPtr list);
  * You need to fill in this function as part of your implementation.
  */
 
-void SLDestroyIterator(SortedListIteratorPtr iter);
+void SLDestroyIterator(SortedListIteratorPtr iter) {
+    free(iter);
+};
 
 
 /*
@@ -247,6 +260,14 @@ void SLDestroyIterator(SortedListIteratorPtr iter);
  * You need to fill in this function as part of your implementation.
  */
 
-void *SLNextItem(SortedListIteratorPtr iter);
+void *SLNextItem(SortedListIteratorPtr iter) {
+    if (iter->ptr == NULL) {
+        return NULL;
+    } else {
+        void* nodeData = iter->ptr->data;
+        iter->ptr = iter->ptr->next;
+        return nodeData;
+    }
+};
 
 #endif
