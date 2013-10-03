@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "sorted-list.h"
 
 /*
@@ -31,6 +32,8 @@ void SLDestroy(SortedListPtr list)
     if (list->size == 0) {
         return;
     }
+
+    // CANNOT DESTROY IF ITERATORS ARE STILL POINTING AT IT
     NodePtr prevPtr = NULL;
     NodePtr ptr     = list->front;
     while (ptr != NULL) {
@@ -58,6 +61,7 @@ int SLInsert(SortedListPtr list, void *newObj)
     // Initialize node to be inserted
     NodePtr newNode = (NodePtr) malloc(sizeof(Node));
     newNode->data = newObj;
+    newNode->iterCount = 0;
 
     // Insert at beginning if list is empty
     if (list->size == 0) {
@@ -137,7 +141,9 @@ int SLRemove(SortedListPtr list, void *newObj)
 
     NodePtr prevPtr = NULL;
     NodePtr ptr     = list->front;
-    while (ptr != NULL) {
+
+    // CANNOT REMOVE IF ITERATOR POINTING AT IT
+    while (ptr != NULL && ptr->iterCount == 0) {
         void* ptrData = ptr->data;
         int compare = list->cf(newObj, ptrData);
 
@@ -172,12 +178,14 @@ int SLRemove(SortedListPtr list, void *newObj)
  */
 
 SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
-    SortedListIteratorPtr slip = (SortedListIteratorPtr) malloc(sizeof(SortedListIterator));
     if (list->size == 0) {
-        slip->ptr = NULL;
-    } else {
-        slip->ptr = list->front;
+      return NULL;
     }
+
+    SortedListIteratorPtr slip = (SortedListIteratorPtr) malloc(sizeof(SortedListIterator));
+    slip->ptr = list->front;
+    slip->ptr->iterCount++;
+
     return slip;
 };
 
@@ -192,6 +200,9 @@ SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
  */
 
 void SLDestroyIterator(SortedListIteratorPtr iter) {
+    if (iter->ptr != NULL) {
+        iter->ptr->iterCount--;
+    }
     free(iter);
 };
 
@@ -212,13 +223,16 @@ void SLDestroyIterator(SortedListIteratorPtr iter) {
  */
 
 void *SLNextItem(SortedListIteratorPtr iter) {
-
-    // TODO consider case where list is modified while iterating
     if (iter->ptr == NULL) {
         return NULL;
-    } else {
-        void* nodeData = iter->ptr->data;
-        iter->ptr = iter->ptr->next;
-        return nodeData;
     }
+
+    void* nodeData = iter->ptr->data;
+    iter->ptr->iterCount--;
+    iter->ptr = iter->ptr->next;
+    if (iter->ptr != NULL) {
+        iter->ptr->iterCount++;
+    }
+
+    return nodeData;
 };

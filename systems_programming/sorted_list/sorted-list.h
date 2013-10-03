@@ -8,9 +8,9 @@
 
 typedef struct Node* NodePtr;
 typedef struct Node {
-    void *data;
+    void*   data;
     NodePtr next;
-    NodePtr iterPtr;
+    int     iterCount;
 } Node;
 
 /*
@@ -44,7 +44,7 @@ typedef struct SortedList* SortedListPtr;
  * beginning to end.  You need to fill in the type as part of your implementation.
  */
 typedef struct SortedListIterator {
-    NodePtr       ptr;
+    NodePtr ptr;
 } SortedListIterator;
 typedef struct SortedListIterator* SortedListIteratorPtr;
 
