@@ -49,20 +49,37 @@ int main()
       /*printf("Item %d: %d\n", i++, *(int*)item);*/
     /*}*/
 
-    SortedListPtr slp = SLCreate(compareStrings);
-    char* a = "Alexaslkdjflkjalksdflkjaslkdf";
+    SortedListPtr slp = SLCreate(compareInts);
+    char* a = "Alex";
     char* b = "Craig";
     char* c = "Tang";
+    int*  d = 5;
+    int*  e = 7;
+    int*  f = 2;
+    int*  g = 4;
+    int*  h = 100;
+    int*  i = 6;
+    int*  j = 8;
 
-    SLInsert(slp, a);
-    SLInsert(slp, b);
-    SLInsert(slp, c);
-
+    SLInsert(slp, (void*)&d);
+    SLInsert(slp, (void*)&e);
+    SLInsert(slp, (void*)&f);
+    SLInsert(slp, (void*)&g);
+    SLInsert(slp, (void*)&h);
+    SLInsert(slp, (void*)&i);
+    SLInsert(slp, (void*)&j);
+    //SLRemove(slp, (void*)&h);
+    //SLRemove(slp, (void*)&j);
+    //SLRemove(slp, (void*)&g);
     SortedListIteratorPtr slip = SLCreateIterator(slp);
     void* item;
-    int i = 0;
+    int k = 0;
     while( (item = SLNextItem(slip)) != NULL) {
-      printf("Item %d: %s\n", i++, (char*)item);
+      if (*(int*)item == 100) {
+          //SLInsert(slp, (void*)&g);
+          SLRemove(slp, (void*)&g);
+      }
+      printf("Item %d: %d\n", k++, *(int*)item);
     }
     SLDestroy(slp);
     SLDestroyIterator(slip);

@@ -143,16 +143,16 @@ int SLRemove(SortedListPtr list, void *newObj)
     NodePtr ptr     = list->front;
 
     // CANNOT REMOVE IF ITERATOR POINTING AT IT
-    while (ptr != NULL && ptr->iterCount == 0) {
+    while (ptr != NULL) {
         void* ptrData = ptr->data;
         int compare = list->cf(newObj, ptrData);
 
-        if (compare == 0 && prevPtr == NULL) { // Remove first element
+        if (compare == 0 && prevPtr == NULL && ptr->iterCount == 0) { // Remove first element
             list->front = ptr->next;
             free(ptr);
             list->size--;
             return 1;
-        } else if (compare == 0) {
+        } else if (compare == 0 && ptr->iterCount == 0) {
             prevPtr->next = ptr->next;
             free(ptr);
             list->size--;

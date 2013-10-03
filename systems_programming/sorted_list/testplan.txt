@@ -1,0 +1,63 @@
+TestPlan - SortedList
+- Craig Perkins
+- Alex Tang
+
+Test Case 1: CompareStrings
+
+Input: 
+Insert: Tang, Alex, Craig
+
+Expected: Tang -> Craig -> Alex
+Result: Tang -> Craig -> Alex
+
+Test Case 2: CompareStrings
+
+Input: 
+Insert: Tang, Alex, Craig
+Remove: Craig
+
+Expected: Tang -> Alex
+Result: Tang -> Alex
+
+Test Case 3: CompareInts
+
+Input: 
+Insert: 5, 7, 2, 4, 100, 6, 7
+
+Result: 100 -> 7 -> 7 -> 6 -> 5 -> 4 -> 2
+
+Test Case 4: CompareInts
+
+Input: 
+Insert: 5, 7, 2, 4, 100, 6, 7
+Remove: 7, 100, 7
+
+Expected: 6 -> 5 -> 4 -> 2 
+Result: 6 -> 5 -> 4 -> 2
+
+Test Case 5: CompareInts, Remove While Iterating (Remove Called while Iterator is on the second 7)
+
+Input: 
+Insert: 5, 7, 2, 4, 100, 6, 7
+Remove: 4
+
+Expected: 100 -> 7 -> 7 -> 6 -> 5 -> 2 
+Result: 100 -> 7 -> 7 -> 6 -> 5 -> 2
+
+Test Case 6: CompareInts, Remove While Iterating (Remove Called while Iterator is on the second 7)
+
+Input: 
+Insert: 5, 7, 2, 4, 100, 6, 7
+Remove: 100
+
+Expected: 100 -> 7 -> 7 -> 6 -> 5 -> 4 -> 2 
+Result: 100 -> 7 -> 7 -> 6 -> 5 -> 4 -> 2
+
+Test Case 7: CompareInts, Remove Node that Iterator is currently on (Remove called on 6)
+
+Input: 
+Insert: 5, 7, 2, 4, 100, 6, 7
+Remove: 6
+
+Expected: 100 -> 7 -> 7 -> 6 -> 5 -> 4 -> 2 
+Result: 100 -> 7 -> 7 -> 6 -> 5 -> 4 -> 2
