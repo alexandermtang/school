@@ -2,6 +2,31 @@
 #include <stdio.h>
 #include "sorted-list.h"
 
+int compareInts(void *p1, void *p2)
+{
+	int i1 = *(int*)p1;
+	int i2 = *(int*)p2;
+
+	return i1 - i2;
+}
+
+int compareDoubles(void *p1, void *p2)
+{
+	double d1 = *(double*)p1;
+
+  double d2 = *(double*)p2;
+
+	return (d1 < d2) ? -1 : ((d1 > d2) ? 1 : 0);
+}
+
+int compareStrings(void *p1, void *p2)
+{
+	char *s1 = p1;
+	char *s2 = p2;
+
+	return strcmp(s1, s2);
+}
+
 /*
  * SLCreate creates a new, empty sorted list.  The caller must provide
  * a comparator function that can be used to order objects that will be
@@ -78,7 +103,7 @@ int SLInsert(SortedListPtr list, void *newObj)
         int compare = list->cf(newObj, ptrData);
 
         // Insert at beginning of list
-        if (compare > 0 && prevPtr == NULL) {
+        if (compare < 0 && prevPtr == NULL) {
             newNode->next = ptr;
             list->front   = newNode;
             list->size++;
@@ -86,15 +111,17 @@ int SLInsert(SortedListPtr list, void *newObj)
         }
 
         // Insert new node after if same data
+        // Do not insert duplicates
         if (compare == 0) {
-            newNode->next = nextPtr;
-            ptr->next     = newNode;
-            list->size++;
-            return 1;
+            /*newNode->next = nextPtr;*/
+            /*ptr->next     = newNode;*/
+            /*list->size++;*/
+            /*return 1;*/
+          return 0;
         }
 
         // Insert at end of list
-        if (compare < 0 && nextPtr == NULL) {
+        if (compare > 0 && nextPtr == NULL) {
             newNode->next = NULL;
             ptr->next     = newNode;
             list->size++;
@@ -105,7 +132,7 @@ int SLInsert(SortedListPtr list, void *newObj)
         void* nextData  = nextPtr->data;
         int compareNext = list->cf(newObj, nextData);
         // if newObj less than current and bigger than next, insert after ptr
-        if (compare < 0 && compareNext > 0) {
+        if (compare > 0 && compareNext < 0) {
             newNode->next = nextPtr;
             ptr->next     = newNode;
             list->size++;

@@ -5,32 +5,52 @@
 #include "tokenizer.h"
 
 typedef struct Term {
-    char *word;
-    int frequency;
+  char *word;
+  int frequency;
 } Term;
+
+char *toLowerCase(char *str)
+{
+  int i = 0;
+  for(i = 0; str[i]; i++) {
+    str[i] = tolower(str[i]);
+  }
+  return str;
+}
 
 int main(int argc, char *argv[])
 {
-    FILE *fp, *ofp;
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
+  FILE *fp;
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t read;
 
-    fp = fopen("sorted-list.c", "r");
-    ofp = fopen("asdf", "w");
-    if (fp == NULL)
-      exit(1);
-
-    while ((read = getline(&line, &len, fp)) != -1) {
-      printf("Line length %zu :\n", read);
-      printf("%s", line);
-      fprintf(ofp, "%s", line);
-    }
-
-    if (line)
-        free(line);
-
-    fclose(fp);
-    fclose(ofp);
+  fp = fopen("makefile", "r");
+  if (fp == NULL)
     exit(1);
+
+  char *token;
+
+  SortedListPtr list = SLCreate(compareStrings);
+
+  while ((read = getline(&line, &len, fp)) != -1) {
+    TokenizerT *tokenizer = TKCreate("", line);
+    while ((token = TKGetNextToken(tokenizer))) {
+      token = toLowerCase(token);
+      SLInsert(list, (void *)token);
+    }
+    TKDestroy(tokenizer);
+  }
+
+  SortedListIteratorPtr iter = SLCreateIterator(list);
+  void *item;
+  while((item = SLNextItem(iter))) {
+    printf("%s\n", (char *)item);
+  }
+
+  SLDestroy(list);
+  SLDestroyIterator(iter);
+
+  fclose(fp);
+  exit(0);
 }

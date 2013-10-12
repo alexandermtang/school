@@ -5,6 +5,11 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
+
+int compareInts(void *p1, void *p2);
+int compareDoubles(void *p1, void *p2);
+int compareStrings(void *p1, void *p2);
 
 typedef struct Node* NodePtr;
 typedef struct Node {
