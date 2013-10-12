@@ -2,22 +2,19 @@ CC=gcc
 CFLAGS=-Wall -g
 
 build:
-	make main.o sorted-list.o libsl.a sl
+	make index.o sorted-list.o index
 
-main.o: main.c
-	$(CC) $(CFLAGS) -c main.c
+index.o: index.c
+	$(CC) $(CFLAGS) -c index.c
 
 sorted-list.o: sorted-list.c sorted-list.h
 	$(CC) $(CFLAGS) -c sorted-list.c
 
-libsl.a: sorted-list.o
-	ar rv libsl.a sorted-list.o
-
-sl:
-	$(CC) $(CFLAGS) sorted-list.o main.o -o sl
+index: sorted-list.o index.o
+	$(CC) $(CFLAGS) sorted-list.o index.o -o index
 
 clean:
-	-rm -rf *.o sl libsl.a *.dSYM
+	-rm -rf *.o index libsl.a *.dSYM
 
 rebuild:
 	make clean build
