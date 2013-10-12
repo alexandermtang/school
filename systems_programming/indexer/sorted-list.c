@@ -98,7 +98,7 @@ int SLInsert(SortedListPtr list, void *newObj)
     NodePtr ptr     = list->front;
     NodePtr nextPtr = ptr->next;
     NodePtr prevPtr = NULL;
-    while (ptr != NULL) {
+    while (ptr) {
         void* ptrData = ptr->data;
         int compare = list->cf(newObj, ptrData);
 
@@ -149,6 +149,16 @@ int SLInsert(SortedListPtr list, void *newObj)
     return 0;
 }
 
+
+NodePtr SLFind(SortedListPtr list, void *target) {
+    NodePtr ptr = list->front;
+    while (ptr) {
+        if (list->cf(ptr->data, target) == 0) {
+            return ptr;
+        }
+    }
+    return NULL;
+}
 
 /*
  * SLRemove removes a given object from a sorted list.  Sorted ordering
