@@ -223,7 +223,7 @@ void TKDestroy(TokenizerT *tk) {
 
 
 char is_delimiter(char character, char* delimiters) {
-
+  return (!isalnum(character));
 	/*
 	 * Description: determines if a particular character is a member of the set of delimiters
 	 * Parameters: character to be compared, string of delimiters
@@ -231,14 +231,14 @@ char is_delimiter(char character, char* delimiters) {
 	 * Returns: 1 if character is a delimiter, 0 if it is not
 	 */
 
-	char* current = NULL;
+	/*char* current = NULL;*/
 
-	for(current = delimiters; current - delimiters < strlen(delimiters); current++) {
-		if(character == *current) {
-			return 1;
-		}
-	}
-	return 0;
+	/*for(current = delimiters; current - delimiters < strlen(delimiters); current++) {*/
+		/*if(character == *current) {*/
+			/*return 1;*/
+		/*}*/
+	/*}*/
+	/*return 0;*/
 }
 
 
