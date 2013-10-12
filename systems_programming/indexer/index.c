@@ -8,17 +8,25 @@ typedef struct Term {
     int frequency;
 } Term;
 
-int main(int argc, char *argv[]) {
-    FILE *fp = fopen("sorted-list.c");
-    if (fp == NULL) {
-        fprintf(stderr, "Can't open input file in.list!\n");
-        exit(1);
+int main(int argc, char *argv[])
+{
+    FILE *fp;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+
+    fp = fopen("sorted-list.c", "r");
+    if (fp == NULL)
+      exit(1);
+
+    while ((read = getline(&line, &len, fp)) != -1) {
+      printf("Line length %zu :\n", read);
+      printf("%s", line);
     }
 
-    char line[80];
+    if (line)
+        free(line);
 
-    while (!fgets(line, 80, fp) != NULL) {
-        fprintf();
-    }
-    return 0;
+    fclose(fp);
+    exit(1);
 }
