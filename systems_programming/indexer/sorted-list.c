@@ -149,13 +149,13 @@ int SLInsert(SortedListPtr list, void *newObj)
     return 0;
 }
 
-
 NodePtr SLFind(SortedListPtr list, void *target) {
     NodePtr ptr = list->front;
     while (ptr) {
         if (list->cf(ptr->data, target) == 0) {
             return ptr;
         }
+        ptr = ptr->next;
     }
     return NULL;
 }

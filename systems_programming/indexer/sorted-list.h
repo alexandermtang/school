@@ -87,6 +87,8 @@ void SLDestroy(SortedListPtr list);
 
 int SLInsert(SortedListPtr list, void *newObj);
 
+NodePtr SLFind(SortedListPtr list, void *target);
+
 
 /*
  * SLRemove removes a given object from a sorted list.  Sorted ordering

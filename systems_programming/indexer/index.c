@@ -42,6 +42,14 @@ int main(int argc, char *argv[])
     TKDestroy(tokenizer);
   }
 
+  NodePtr node = SLFind(list, "o");
+  if (node) {
+  printf("TARGET: %s\n\n\n", (char *)node->data);
+  } else {
+    printf("notfound");
+  }
+
+
   SortedListIteratorPtr iter = SLCreateIterator(list);
   void *item;
   while((item = SLNextItem(iter))) {
