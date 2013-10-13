@@ -4,30 +4,35 @@
 #include "sorted-list.h"
 #include "tokenizer.h"
 
-typedef struct Word {
-  char *word;
+typedef struct Term {
+  char *term;
   SortedListPtr list;
-} Word;
+} Term;
 
-typedef struct FileCount {
+typedef struct Record {
   char *filename;
-  int frequency;
-} FileCount;
+  int count;
+} Record;
 
-int compareWords(void *p1, void *p2)
+int compareTerms(void *p1, void *p2)
 {
-	Word *i1 = (Word *)p1;
-	Word *i2 = (Word *)p2;
+	Term *i1 = (Term *)p1;
+	Term *i2 = (Term *)p2;
 
-	return compareStrings(i1->word, i2->word);
+	return compareStrings(i1->term, i2->term);
 }
 
-int compareFileCounts(void *p1, void *p2)
+int compareRecords(void *p1, void *p2)
 {
-	FileCount *i1 = (FileCount *)p1;
-	FileCount *i2 = (FileCount *)p2;
+	Record *i1 = (Record *)p1;
+	Record *i2 = (Record *)p2;
 
-	return compareInts(&(i1->frequency), &(i2->frequency));
+	int c = compareInts(&(i1->count), &(i2->count));
+  if (c != 0) {
+    return c;
+  } else {
+    return compareStrings(i1->filename, i2->filename);
+  }
 }
 
 char *toLowerCase(char *str)
@@ -46,33 +51,83 @@ int main(int argc, char *argv[])
   size_t len = 0;
   ssize_t read;
 
-  fp = fopen("makefile", "r");
+  char *filetobeopened = "makefile";
+
+  fp = fopen(filetobeopened, "r");
   if (fp == NULL)
     exit(1);
 
   char *token;
 
-  SortedListPtr list = SLCreate(compareWords);
+  SortedListPtr table = SLCreate(compareTerms);
 
   while ((read = getline(&line, &len, fp)) != -1) {
     TokenizerT *tokenizer = TKCreate("", line);
     while ((token = TKGetNextToken(tokenizer))) {
       token = toLowerCase(token);
-      Word *w = (Word *)malloc(sizeof(Word));
-      w->word = token;
-      SLInsert(list, (void *)w);
+
+      Term *t = (Term *)malloc(sizeof(Term));
+      t->term = token;
+
+      NodePtr node = SLFind(table, t);
+
+      if (node) {
+        t = (Term *) node;
+
+        SortedListPtr records = t->list;
+        NodePtr ptr = records->front;
+        while (ptr) {
+          Record *temp = (Record *)ptr->data;
+          if (compareStrings(filetobeopened, temp->filename) == 0) {
+            break;
+          }
+          ptr = ptr->next;
+        }
+
+        if (ptr) {
+          Record *r = (Record *)malloc(sizeof(Record));
+          Record *temp = (Record *)ptr->data;
+          r->filename = temp->filename;
+          r->count = temp->count;
+          SLRemove(records, r);
+          r->count++;
+          SLInsert(records, r);
+        }
+      } else {
+        t->list = SLCreate(compareRecords);
+
+        Record *r = (Record *)malloc(sizeof(Record));
+        r->filename = filetobeopened;
+        r->count = 1;
+        SLInsert(t->list, r);
+
+        SLInsert(table, (void *)t);
+      }
+
     }
     TKDestroy(tokenizer);
   }
 
-  SortedListIteratorPtr iter = SLCreateIterator(list);
+  free(line);
+
+  SortedListIteratorPtr iter = SLCreateIterator(table);
   void *item;
   while((item = SLNextItem(iter))) {
-    Word *ptr = (Word *)item;
-    printf("%s\n", ptr->word);
+    Term *t = (Term *)item;
+    printf("Term: %s \n", t->term);
+
+    SortedListIteratorPtr iter2 = SLCreateIterator(t->list);
+    void *item2;
+    printf("Record: ");
+    while((item2 = SLNextItem(iter2))) {
+      Record *r = (Record *)item2;
+      printf("%s %d\t", r->filename, r->count);
+    }
+    printf("\n");
+    SLDestroyIterator(iter2);
   }
 
-  SLDestroy(list);
+  SLDestroy(table);
   SLDestroyIterator(iter);
 
   fclose(fp);
