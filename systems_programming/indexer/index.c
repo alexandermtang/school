@@ -4,10 +4,31 @@
 #include "sorted-list.h"
 #include "tokenizer.h"
 
-typedef struct Term {
+typedef struct Word {
   char *word;
+  SortedListPtr list;
+} Word;
+
+typedef struct FileCount {
+  char *filename;
   int frequency;
-} Term;
+} FileCount;
+
+int compareWords(void *p1, void *p2)
+{
+	Word *i1 = (Word *)p1;
+	Word *i2 = (Word *)p2;
+
+	return compareStrings(i1->word, i2->word);
+}
+
+int compareFileCounts(void *p1, void *p2)
+{
+	FileCount *i1 = (FileCount *)p1;
+	FileCount *i2 = (FileCount *)p2;
+
+	return compareInts(&(i1->frequency), &(i2->frequency));
+}
 
 char *toLowerCase(char *str)
 {
@@ -31,29 +52,24 @@ int main(int argc, char *argv[])
 
   char *token;
 
-  SortedListPtr list = SLCreate(compareStrings);
+  SortedListPtr list = SLCreate(compareWords);
 
   while ((read = getline(&line, &len, fp)) != -1) {
     TokenizerT *tokenizer = TKCreate("", line);
     while ((token = TKGetNextToken(tokenizer))) {
       token = toLowerCase(token);
-      SLInsert(list, (void *)token);
+      Word *w = (Word *)malloc(sizeof(Word));
+      w->word = token;
+      SLInsert(list, (void *)w);
     }
     TKDestroy(tokenizer);
   }
 
-  NodePtr node = SLFind(list, "o");
-  if (node) {
-  printf("TARGET: %s\n\n\n", (char *)node->data);
-  } else {
-    printf("notfound");
-  }
-
-
   SortedListIteratorPtr iter = SLCreateIterator(list);
   void *item;
   while((item = SLNextItem(iter))) {
-    printf("%s\n", (char *)item);
+    Word *ptr = (Word *)item;
+    printf("%s\n", ptr->word);
   }
 
   SLDestroy(list);
