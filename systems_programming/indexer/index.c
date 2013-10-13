@@ -3,31 +3,32 @@
 #include <string.h>
 #include "sorted-list.h"
 #include "tokenizer.h"
+#include "hash.h"
 
-typedef struct Word {
-  char *word;
+typedef struct Term {
+  char *term;
   SortedListPtr list;
-} Word;
+} Term;
 
-typedef struct FileCount {
+typedef struct Record {
   char *filename;
-  int frequency;
-} FileCount;
+  int count;
+} Record;
 
-int compareWords(void *p1, void *p2)
+int compareTerms(void *p1, void *p2)
 {
-	Word *i1 = (Word *)p1;
-	Word *i2 = (Word *)p2;
+	Term *i1 = (Term *)p1;
+	Term *i2 = (Term *)p2;
 
-	return compareStrings(i1->word, i2->word);
+	return compareStrings(i1->term, i2->term);
 }
 
-int compareFileCounts(void *p1, void *p2)
+int compareRecords(void *p1, void *p2)
 {
-	FileCount *i1 = (FileCount *)p1;
-	FileCount *i2 = (FileCount *)p2;
+	Record *i1 = (Record *)p1;
+	Record *i2 = (Record *)p2;
 
-	return compareInts(&(i1->frequency), &(i2->frequency));
+	return compareInts(&(i1->count), &(i2->count));
 }
 
 char *toLowerCase(char *str)
@@ -52,28 +53,30 @@ int main(int argc, char *argv[])
 
   char *token;
 
-  SortedListPtr list = SLCreate(compareWords);
+  struct hash_table *table = hash_table_new(100);
 
   while ((read = getline(&line, &len, fp)) != -1) {
     TokenizerT *tokenizer = TKCreate("", line);
     while ((token = TKGetNextToken(tokenizer))) {
       token = toLowerCase(token);
-      Word *w = (Word *)malloc(sizeof(Word));
-      w->word = token;
-      SLInsert(list, (void *)w);
+      Term *t = (Term *)malloc(sizeof(Term));
+      t->term = token;
+      if (!hash_table_get(table, token)) {
+        hash_table_store(table, token, t);
+      }
     }
     TKDestroy(tokenizer);
   }
 
-  SortedListIteratorPtr iter = SLCreateIterator(list);
-  void *item;
-  while((item = SLNextItem(iter))) {
-    Word *ptr = (Word *)item;
-    printf("%s\n", ptr->word);
+  char **keys = hash_table_get_all_keys(table);
+  int i = 0;
+  qsort(keys, table->population, sizeof(char*), compareStrings);
+  for (i = 0; i < table->population; i++) {
+    printf("%s\n", keys[i]);
+    free(hash_table_get(table, keys[i]));
   }
 
-  SLDestroy(list);
-  SLDestroyIterator(iter);
+  hash_table_destroy(table);
 
   fclose(fp);
   exit(0);

@@ -2,7 +2,10 @@ CC=gcc
 CFLAGS=-Wall -g
 
 build:
-	make index.o sorted-list.o tokenizer.o index
+	make hash.o index.o sorted-list.o tokenizer.o index
+
+hash.o: hash.c
+	$(CC) $(CFLAGS) -c hash.c
 
 index.o: index.c
 	$(CC) $(CFLAGS) -c index.c
@@ -13,8 +16,8 @@ sorted-list.o: sorted-list.c sorted-list.h
 tokenizer.o: tokenizer.c tokenizer.h
 	$(CC) $(CFLAGS) -c tokenizer.c
 
-index: index.o sorted-list.o tokenizer.o
-	$(CC) $(CFLAGS) index.o sorted-list.o tokenizer.o -o index
+index: hash.o index.o sorted-list.o tokenizer.o
+	$(CC) $(CFLAGS) hash.o index.o sorted-list.o tokenizer.o -o index
 
 clean:
 	-rm -rf *.o index *.dSYM

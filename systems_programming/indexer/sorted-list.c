@@ -19,12 +19,12 @@ int compareDoubles(void *p1, void *p2)
 	return (d1 < d2) ? -1 : ((d1 > d2) ? 1 : 0);
 }
 
-int compareStrings(void *p1, void *p2)
+int compareStrings(const void *p1, const void *p2)
 {
-	char *s1 = p1;
-	char *s2 = p2;
+	const char **s1 = (const char**)p1;
+	const char **s2 = (const char**)p2;
 
-	return strcmp(s1, s2);
+	return strcmp(*s1, *s2);
 }
 
 /*
