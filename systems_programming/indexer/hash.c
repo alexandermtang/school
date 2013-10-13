@@ -222,6 +222,13 @@ char ** hash_table_get_all_keys(struct hash_table *table) {
 }
 
 int lua_hash(char *str) {
+  /*int sum = 0, i;*/
+  /*for (i = 0; i < strlen(str); i++) {*/
+    /*sum+=str[i];*/
+  /*}*/
+  /*printf("hash fcn %s %d\n",str,sum);*/
+  /*return sum;*/
+
   int l = (int)strlen(str);
   int i, step = ((l >> 5) + 1);
   int h = l + (l >= 4?*(int*)str:0);
