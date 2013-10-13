@@ -85,7 +85,7 @@ void * hash_table_store_with_resize(struct hash_table * table, char * word, void
       head = head->next;
     }
 
-    /* otherwise, this is just a collison. resolve. */
+    /* otherwise, this is just a collision. resolve. */
     head = dummy;
     struct hash_node * new_head = hash_node_new(word, elem);
     new_head->next = head;
@@ -226,7 +226,6 @@ int lua_hash(char *str) {
   /*for (i = 0; i < strlen(str); i++) {*/
     /*sum+=str[i];*/
   /*}*/
-  /*printf("hash fcn %s %d\n",str,sum);*/
   /*return sum;*/
 
   int l = (int)strlen(str);

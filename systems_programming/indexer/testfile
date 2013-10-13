@@ -1,8 +1,5 @@
-a
-a
-aa
-b
-b
-bbbb
-c
-d
+CC=gcc
+CC
+cc
+CFLAGS=-Wall -g
+clean
