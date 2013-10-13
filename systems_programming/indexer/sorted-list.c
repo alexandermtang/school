@@ -55,6 +55,7 @@ SortedListPtr SLCreate(CompareFuncT cf)
 void SLDestroy(SortedListPtr list)
 {
     if (list->size == 0) {
+        free(list);
         return;
     }
 
@@ -118,7 +119,7 @@ int SLInsert(SortedListPtr list, void *newObj)
             /*ptr->next     = newNode;*/
             /*list->size++;*/
             /*return 1;*/
-          return 0;
+          break;
         }
 
         // Insert at end of list
