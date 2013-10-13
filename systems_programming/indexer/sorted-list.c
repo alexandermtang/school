@@ -63,6 +63,7 @@ void SLDestroy(SortedListPtr list)
     while (ptr != NULL) {
         prevPtr = ptr;
         ptr = ptr->next;
+        free(prevPtr->data);
         free(prevPtr);
     }
     free(list);
@@ -145,6 +146,7 @@ int SLInsert(SortedListPtr list, void *newObj)
     }
 
     // Fail to insert, free newNode
+    free(newNode->data);
     free(newNode);
     return 0;
 }
@@ -185,11 +187,13 @@ int SLRemove(SortedListPtr list, void *newObj)
 
         if (compare == 0 && prevPtr == NULL && ptr->refCount == 0) { // Remove first element
             list->front = ptr->next;
+            free(ptr->data);
             free(ptr);
             list->size--;
             return 1;
         } else if (compare == 0 && ptr->refCount == 0) {
             prevPtr->next = ptr->next;
+            free(ptr->data);
             free(ptr);
             list->size--;
             return 1;
