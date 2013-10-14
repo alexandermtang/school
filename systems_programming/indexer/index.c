@@ -53,15 +53,18 @@ void print_list(FILE* fp, SortedListPtr table) {
   while((item = SLNextItem(iter))) {
     Term *t = (Term *)item;
     fprintf(fp, "<list> %s\n", t->term);
+    fflush(fp);
 
     SortedListIteratorPtr iter2 = SLCreateIterator(t->list);
     void *item2;
     while((item2 = SLNextItem(iter2))) {
       Record *r = (Record *)item2;
       fprintf(fp, "%s %d ", r->filename, r->count);
+      fflush(fp);
     }
 
     fprintf(fp, "\n</list>\n\n");
+    fflush(fp);
     SLDestroyIterator(iter2);
   }
 
@@ -74,6 +77,7 @@ void index_file(SortedListPtr table, char *filename) {
 
   if (input_fp == NULL) {
     fprintf(stderr, "Error: %s does not exist\n", filename);
+    fclose(input_fp);
     return;
   }
 
@@ -161,7 +165,6 @@ void index_dir(SortedListPtr table, char *dirname) {
       }
 
       if (S_ISREG(info.st_mode)) {
-        printf("%s IS REG\n", ent->d_name);
         index_file(table, ent->d_name);
       }
     }
