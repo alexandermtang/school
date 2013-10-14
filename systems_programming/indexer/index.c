@@ -111,12 +111,13 @@ void index_file(SortedListPtr table, char *filename) {
       token = toLowerCase(token);
 
       Term *t = (Term *)malloc(sizeof(Term));
-      t->term = token;
+      t->term = (char *)malloc((strlen(token) + 1) * sizeof(char));
+      strcpy(t->term, token);
 
       NodePtr term_node = SLFind(table, t);
 
       // alloc new space for new filenames, i dont understand this
-      char *file = calloc(4096, sizeof(char));
+      char *file = (char *)malloc((strlen(filename) + 1) * sizeof(char));
       strcpy(file, filename);
 
       if (term_node) {
@@ -127,7 +128,7 @@ void index_file(SortedListPtr table, char *filename) {
         NodePtr record_node = records->front;
         while (record_node) {
           Record *temp = (Record *)record_node->data;
-          if (compareStrings(filename, temp->filename) == 0) {
+          if (compareStrings(file, temp->filename) == 0) {
             break;
           }
           record_node = record_node->next;
@@ -160,8 +161,8 @@ void index_file(SortedListPtr table, char *filename) {
         SLInsert(t->list, r);
         SLInsert(table, t);
       }
+      free(token);
     }
-    free(token);
     TKDestroy(tokenizer);
   }
 
@@ -230,6 +231,7 @@ int main(int argc, char *argv[])
     }
 
     free(line);
+
     remove(TEMP_PATH_FILE);
     fclose(tmp);
   }
