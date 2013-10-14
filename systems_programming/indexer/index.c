@@ -1,10 +1,16 @@
+#define _XOPEN_SOURCE 500
+#define _GNU_SOURCE
+#define TEMP_PATH_FILE ".file_paths.tmp"
+
+#include <dirent.h>
+#include <ftw.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "sorted-list.h"
 #include "tokenizer.h"
-#include "hash.h"
 
 typedef struct Term {
   char *term;
@@ -26,10 +32,15 @@ int compareTerms(void *p1, void *p2)
 
 int compareRecords(void *p1, void *p2)
 {
-  Record *i1 = (Record *)p1;
-  Record *i2 = (Record *)p2;
+	Record *i1 = (Record *)p1;
+	Record *i2 = (Record *)p2;
 
-  return compareInts(&(i1->count), &(i2->count));
+	int c = compareInts(&(i2->count), &(i1->count));
+  if (c != 0) {
+    return c;
+  } else {
+    return compareStrings(i1->filename, i2->filename);
+  }
 }
 
 char *toLowerCase(char *str)
@@ -41,108 +52,182 @@ char *toLowerCase(char *str)
   return str;
 }
 
-int main(int argc, char *argv[])
-{
-  FILE *fp;
+void print_list(FILE* fp, SortedListPtr table) {
+  SortedListIteratorPtr iter = SLCreateIterator(table);
+  void *item;
+  while((item = SLNextItem(iter))) {
+    Term *t = (Term *)item;
+    fprintf(fp, "<list> %s\n", t->term);
+    fflush(fp);
+
+    SortedListIteratorPtr iter2 = SLCreateIterator(t->list);
+    void *item2;
+    while((item2 = SLNextItem(iter2))) {
+      Record *r = (Record *)item2;
+      fprintf(fp, "%s %d ", r->filename, r->count);
+      fflush(fp);
+    }
+
+    fprintf(fp, "\n</list>\n\n");
+    fflush(fp);
+    SLDestroyIterator(iter2);
+  }
+
+  SLDestroyIterator(iter);
+}
+
+void index_file(SortedListPtr table, char *filename) {
+  FILE *input_fp;
+  input_fp = fopen(filename, "r");
+
+  if (input_fp == NULL) {
+    fprintf(stderr, "Error: %s does not exist\n", filename);
+    fclose(input_fp);
+    return;
+  }
+
   char *line = NULL;
   size_t len = 0;
   ssize_t read;
 
-  char *filetoopen = "testfile";
-
-  fp = fopen(filetoopen, "r");
-  if (fp == NULL) {
-    fprintf(stderr, "Error: %s does not exist\n", filetoopen);
-    exit(0);
-  }
-
-  struct hash_table *table = hash_table_new(1);
-  struct hash_table *table2 = hash_table_new(1);
-      printf("%s %d\n", "wall", lua_hash("wall"));
-      printf("%s %d\n", "cc", lua_hash("cc"));
-
-  while ((read = getline(&line, &len, fp)) != -1) {
+  while ((read = getline(&line, &len, input_fp)) != -1) {
     TokenizerT *tokenizer = TKCreate("", line);
     char *token;
     while ((token = TKGetNextToken(tokenizer))) {
       token = toLowerCase(token);
-      if(!hash_table_get(table2, token)) {
-        printf("\n    inserting token2 %s\n", token);
-        hash_table_store(table2, token, NULL);
-      }
-      printf("\ntoken %s\n", token);
 
-      Term *t = (Term *) hash_table_get(table, token);
+      Term *t = (Term *)malloc(sizeof(Term));
+      t->term = token;
 
+      NodePtr node = SLFind(table, t);
 
-      if (t) {
-        printf("looking for %s found %s\n", token, t->term);
-        // SLInsert filename or increase count
-        SortedListIteratorPtr iter = SLCreateIterator(t->list);
+      if (node) {
+        t = (Term *) node->data;
 
-        Record *rec;
-        while ((rec = (Record *)SLNextItem(iter))) {
-          if (strcmp(rec->filename, filetoopen) == 0) {
-            rec->count++;
+        SortedListPtr records = t->list;
+        NodePtr ptr = records->front;
+        while (ptr) {
+          Record *temp = (Record *)ptr->data;
+          if (compareStrings(filename, temp->filename) == 0) {
             break;
           }
+          ptr = ptr->next;
         }
 
-        free(iter);
+        if (ptr) {
+          Record *r = (Record *)malloc(sizeof(Record));
+          Record *temp = (Record *)ptr->data;
+          r->filename = temp->filename;
+          r->count = temp->count;
+          SLRemove(records, r);
+          r->count++;
+          SLInsert(records, r);
+        } else {
+          Record *r = (Record *)malloc(sizeof(Record));
+          r->filename = filename;
+          r->count = 1;
+          SLInsert(records, r);
+        }
       } else {
-        t = (Term *)malloc(sizeof(Term));
-        t->term = token;
         t->list = SLCreate(compareRecords);
-        printf("notfound %s\n", t->term);
 
         Record *r = (Record *)malloc(sizeof(Record));
-        r->filename = filetoopen;
+        r->filename = filename;
         r->count = 1;
-
         SLInsert(t->list, r);
 
-        hash_table_store(table, token, t);
+        SLInsert(table, (void *)t);
       }
+
     }
     TKDestroy(tokenizer);
   }
 
-  // need to free(line) bc getline mallocs space for line
   free(line);
+  fclose(input_fp);
+}
 
+void index_dir(SortedListPtr table, char *dirname) {
+  DIR *dir;
+  struct dirent *ent;
 
-  printf("table pop %d\n", table->population);
-  printf("table2 pop %d\n", table2->population);
-  char **keys = hash_table_get_all_keys(table);
-  char **keys2 = hash_table_get_all_keys(table2);
-  int i = 0;
-  qsort(keys2, table2->population, sizeof(char*), compareStrings);
-  for (i = 0; i < table2->population; i++) {
-    printf("table 2 key: %s\n", keys2[i]);
-  }
+  dir = opendir(dirname);
 
-  qsort(keys, table->population, sizeof(char*), compareStrings);
-  for (i = 0; i < table->population; i++) {
-    Term *t = (Term *) hash_table_get(table, keys[i]);
-    printf("%s ", t->term);
+  while((ent = readdir(dir)) != NULL) {
+    if (ent->d_name[0] != '.') {
+      struct stat info;
+      lstat(ent->d_name, &info);
 
-    SortedListIteratorPtr iter = SLCreateIterator(t->list);
+      if (S_ISDIR(info.st_mode)) {
+        /*int length = strlen(dirname) + strlen(ent->d_name) + 1;*/
+        /*char str[length];*/
+        /*strcat(str, dirname);*/
+        /*strcat(str, "/");*/
+        /*strcat(str, ent->d_name);*/
 
-    Record *rec;
-    while ((rec = (Record *)SLNextItem(iter))) {
-      printf("\t\t%s %d\n", rec->filename, rec->count);
+        /*printf("%s IS DIR\n", str);*/
+        /*index_dir(table, dirname);*/
+      }
+
+      if (S_ISREG(info.st_mode)) {
+        index_file(table, ent->d_name);
+      }
     }
+  }
+  closedir(dir);
+}
 
-    free(t->term);
-    SLDestroy(t->list);
-    free(t);
+int save_file_paths(const char *fpath, const struct stat *sb,
+             int tflag, struct FTW *ftwbuf)
+{
+  FILE *tmp;
+  tmp = fopen(TEMP_PATH_FILE, "a");
 
-    SLDestroyIterator(iter);
+  // fpath cannot contain ".file_paths.tmp"
+  if (tflag == FTW_F && (strstr(fpath, TEMP_PATH_FILE) == NULL)) {
+    fprintf(tmp, "%s\n", fpath);
   }
 
-  free(keys);
-  hash_table_destroy(table);
+  fclose(tmp);
 
-  fclose(fp);
+  return 0;
+}
+int main(int argc, char *argv[])
+{
+  if (argc != 3) {
+    fprintf(stderr, "Error: incorrect format, expecting: \n");
+    fprintf(stderr, "./index <inverted-index file name> <directory or file name>\n");
+    exit(0);
+  }
+  remove(TEMP_PATH_FILE);
+
+  SortedListPtr table = SLCreate(compareTerms);
+
+  char *input_arg = argv[2];
+  char *output_file = argv[1];
+
+  int flags = 0;
+  nftw(input_arg, save_file_paths, 20, flags);
+
+  struct stat info;
+  lstat(input_arg, &info);
+
+  /*if (S_ISDIR(info.st_mode)) {*/
+    /*index_dir(table, input_arg);*/
+  /*}*/
+
+  if (S_ISREG(info.st_mode)) {
+    index_file(table, input_arg);
+  }
+
+  FILE *output_fp;
+  output_fp = fopen(output_file, "w");
+  // if output_file exists, need to prompt user if the want to rewrite
+
+  print_list(output_fp, table);
+
+  SLDestroy(table);
+
+  fclose(output_fp);
   exit(0);
 }
