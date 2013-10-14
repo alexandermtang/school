@@ -1,4 +1,3 @@
-/*#define _XOPEN_SOURCE 500 // comment this line out if on OSX*/
 #define _GNU_SOURCE
 #define TEMP_PATH_FILE ".file_paths.tmp"
 
@@ -219,12 +218,14 @@ int main(int argc, char *argv[])
     fclose(tmp);
   }
 
+  // TODO if output_file already exists, prompt user
   // print to output
   FILE *output_fp;
   output_fp = fopen(output_file, "w");
   print_list(output_fp, table);
   fclose(output_fp);
 
+  // NEED to fix SLDestroy to work with Record and Term structures
   SLDestroy(table);
 
   exit(0);
