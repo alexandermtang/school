@@ -80,8 +80,6 @@ void index_file(SortedListPtr table, char *filename) {
   FILE *input_fp;
   input_fp = fopen(filename, "r");
 
-  printf("indexing %s\n", filename);
-
   if (input_fp == NULL) {
     fprintf(stderr, "Error: %s does not exist\n", filename);
     fclose(input_fp);
@@ -90,38 +88,41 @@ void index_file(SortedListPtr table, char *filename) {
 
   char *line = NULL;
   size_t len = 0;
-  ssize_t read;
+  ssize_t numchars;
 
-  while ((read = getline(&line, &len, input_fp)) != -1) {
+  while ((numchars = getline(&line, &len, input_fp)) != -1) {
     TokenizerT *tokenizer = TKCreate("", line);
     char *token;
     while ((token = TKGetNextToken(tokenizer))) {
       token = toLowerCase(token);
 
-      Term *t = (Term *)malloc(sizeof(Term));
+      Term *t = (Term *) malloc(sizeof(Term));
       t->term = token;
 
-      NodePtr node = SLFind(table, t);
+      NodePtr term_node = SLFind(table, t);
 
-      if (node) {
-        t = (Term *) node->data;
+      if (term_node) {
+        free(t);
+        t = (Term *) term_node->data;
 
         SortedListPtr records = t->list;
-        NodePtr ptr = records->front;
-        while (ptr) {
-          Record *temp = (Record *)ptr->data;
+        NodePtr record_node = records->front;
+        while (record_node) {
+          Record *temp = (Record *)record_node->data;
           if (compareStrings(filename, temp->filename) == 0) {
             break;
           }
-          ptr = ptr->next;
+          record_node = record_node->next;
         }
 
-        if (ptr) {
-          Record *r = (Record *)malloc(sizeof(Record));
-          Record *temp = (Record *)ptr->data;
+        if (record_node) {
+          Record *temp = (Record *) record_node->data;
+
+          Record *r = (Record *) malloc(sizeof(Record));
           r->filename = temp->filename;
           r->count = temp->count;
-          SLRemove(records, r);
+
+          SLRemove(records, temp);
           r->count++;
           SLInsert(records, r);
         } else {
@@ -133,50 +134,19 @@ void index_file(SortedListPtr table, char *filename) {
       } else {
         t->list = SLCreate(compareRecords);
 
-        Record *r = (Record *)malloc(sizeof(Record));
+        Record *r = (Record *) malloc(sizeof(Record));
         r->filename = filename;
         r->count = 1;
         SLInsert(t->list, r);
 
-        SLInsert(table, (void *)t);
+        SLInsert(table, t);
       }
-
     }
     TKDestroy(tokenizer);
   }
 
   free(line);
   fclose(input_fp);
-}
-
-void index_dir(SortedListPtr table, char *dirname) {
-  DIR *dir;
-  struct dirent *ent;
-
-  dir = opendir(dirname);
-
-  while((ent = readdir(dir)) != NULL) {
-    if (ent->d_name[0] != '.') {
-      struct stat info;
-      lstat(ent->d_name, &info);
-
-      if (S_ISDIR(info.st_mode)) {
-        /*int length = strlen(dirname) + strlen(ent->d_name) + 1;*/
-        /*char str[length];*/
-        /*strcat(str, dirname);*/
-        /*strcat(str, "/");*/
-        /*strcat(str, ent->d_name);*/
-
-        /*printf("%s IS DIR\n", str);*/
-        /*index_dir(table, dirname);*/
-      }
-
-      if (S_ISREG(info.st_mode)) {
-        index_file(table, ent->d_name);
-      }
-    }
-  }
-  closedir(dir);
 }
 
 int save_file_paths(const char *fpath, const struct stat *sb,
@@ -194,6 +164,7 @@ int save_file_paths(const char *fpath, const struct stat *sb,
 
   return 0;
 }
+
 int main(int argc, char *argv[])
 {
   if (argc != 3) {
@@ -211,14 +182,13 @@ int main(int argc, char *argv[])
   struct stat info;
   lstat(input_arg, &info);
 
+  if (!(S_ISREG(info.st_mode)) && !(S_ISDIR(info.st_mode))) {
+    fprintf(stderr, "Error: %s is not a file or directory", input_arg);
+    exit(0);
+  }
 
   if (S_ISREG(info.st_mode)) {
     index_file(table, input_arg);
-
-    FILE *output_fp;
-    output_fp = fopen(output_file, "w");
-    print_list(output_fp, table);
-    fclose(output_fp);
   }
 
   if (S_ISDIR(info.st_mode)) {
@@ -234,29 +204,28 @@ int main(int argc, char *argv[])
     ssize_t numchars;
 
     while ((numchars = getline(&line, &len, tmp)) != -1) {
-      // NEED TO REMOVE \n at end of line
+      // remove \n at end of line
       line[numchars - 1] = '\0'; numchars--;
-      printf("open %s\n", line);
-      index_file(table, line);
+
+      // alloc new space for new filenames, i dont understand this
+      char *file = calloc(4096, sizeof(char));
+      strcpy(file, line);
+
+      index_file(table, file);
     }
 
-    /*free(line);*/
+    free(line);
+    remove(TEMP_PATH_FILE);
     fclose(tmp);
-
-    FILE *output_fp;
-    output_fp = fopen(output_file, "w");
-    print_list(output_fp, table);
-    fclose(output_fp);
   }
 
-  /*FILE *output_fp;*/
-  /*output_fp = fopen(output_file, "w");*/
-  // if output_file exists, need to prompt user if the want to rewrite
-
-  /*print_list(output_fp, table);*/
+  // print to output
+  FILE *output_fp;
+  output_fp = fopen(output_file, "w");
+  print_list(output_fp, table);
+  fclose(output_fp);
 
   SLDestroy(table);
 
-  /*fclose(output_fp);*/
   exit(0);
 }
