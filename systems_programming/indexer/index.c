@@ -35,11 +35,7 @@ int compareRecords(void *p1, void *p2)
 	Record *i2 = (Record *)p2;
 
 	int c = compareInts(&(i2->count), &(i1->count));
-  if (c != 0) {
-    return c;
-  } else {
-    return compareStrings(i1->filename, i2->filename);
-  }
+  return (c != 0) ? c : compareStrings(i1->filename, i2->filename);
 }
 
 void destroy_term(void *p)
@@ -114,7 +110,7 @@ void index_file(SortedListPtr table, char *filename) {
     while ((token = TKGetNextToken(tokenizer))) {
       token = toLowerCase(token);
 
-      Term *t = (Term *) malloc(sizeof(Term));
+      Term *t = (Term *)malloc(sizeof(Term));
       t->term = token;
 
       NodePtr term_node = SLFind(table, t);
@@ -165,6 +161,7 @@ void index_file(SortedListPtr table, char *filename) {
         SLInsert(table, t);
       }
     }
+    free(token);
     TKDestroy(tokenizer);
   }
 
