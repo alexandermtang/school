@@ -42,6 +42,21 @@ int compareRecords(void *p1, void *p2)
   }
 }
 
+void destroy_term(void *p)
+{
+  Term *t = (Term *)p;
+  free(t->term);
+  SLDestroy(t->list);
+  free(t);
+}
+
+void destroy_record(void *p)
+{
+  Record *r = (Record *)p;
+  free(r->filename);
+  free(r);
+}
+
 char *toLowerCase(char *str)
 {
   int i = 0;
@@ -51,24 +66,28 @@ char *toLowerCase(char *str)
   return str;
 }
 
-void print_list(FILE* fp, SortedListPtr table) {
+void print_table(FILE* fp, SortedListPtr table) {
   SortedListIteratorPtr iter = SLCreateIterator(table);
-  void *item;
-  while((item = SLNextItem(iter))) {
-    Term *t = (Term *)item;
+  Term *t;
+
+  while((t = (Term *)SLNextItem(iter))) {
     fprintf(fp, "<list> %s\n", t->term);
     fflush(fp);
 
     SortedListIteratorPtr iter2 = SLCreateIterator(t->list);
-    void *item2;
-    while((item2 = SLNextItem(iter2))) {
-      Record *r = (Record *)item2;
-      fprintf(fp, "%s %d ", r->filename, r->count);
+
+    // manually print 1st record to avoid whitespace issues
+    Record *r = (Record *)SLNextItem(iter2);
+    fprintf(fp, "%s %d", r->filename, r->count);
+
+    while((r = (Record *) SLNextItem(iter2))) {
+      fprintf(fp, " %s %d", r->filename, r->count);
       fflush(fp);
     }
 
     fprintf(fp, "\n</list>\n\n");
     fflush(fp);
+
     SLDestroyIterator(iter2);
   }
 
@@ -100,6 +119,10 @@ void index_file(SortedListPtr table, char *filename) {
 
       NodePtr term_node = SLFind(table, t);
 
+      // alloc new space for new filenames, i dont understand this
+      char *file = calloc(4096, sizeof(char));
+      strcpy(file, filename);
+
       if (term_node) {
         free(t);
         t = (Term *) term_node->data;
@@ -118,7 +141,7 @@ void index_file(SortedListPtr table, char *filename) {
           Record *temp = (Record *) record_node->data;
 
           Record *r = (Record *) malloc(sizeof(Record));
-          r->filename = temp->filename;
+          r->filename = file;
           r->count = temp->count;
 
           SLRemove(records, temp);
@@ -126,18 +149,19 @@ void index_file(SortedListPtr table, char *filename) {
           SLInsert(records, r);
         } else {
           Record *r = (Record *)malloc(sizeof(Record));
-          r->filename = filename;
+          r->filename = file;
           r->count = 1;
+
           SLInsert(records, r);
         }
       } else {
-        t->list = SLCreate(compareRecords);
+        t->list = SLCreate(compareRecords, destroy_record);
 
         Record *r = (Record *) malloc(sizeof(Record));
-        r->filename = filename;
+        r->filename = file;
         r->count = 1;
-        SLInsert(t->list, r);
 
+        SLInsert(t->list, r);
         SLInsert(table, t);
       }
     }
@@ -171,9 +195,8 @@ int main(int argc, char *argv[])
     fprintf(stderr, "./index <inverted-index file name> <directory or file name>\n");
     exit(0);
   }
-  remove(TEMP_PATH_FILE);
 
-  SortedListPtr table = SLCreate(compareTerms);
+  SortedListPtr table = SLCreate(compareTerms, destroy_term);
 
   char *input_arg = argv[2];
   char *output_file = argv[1];
@@ -191,6 +214,7 @@ int main(int argc, char *argv[])
   }
 
   if (S_ISDIR(info.st_mode)) {
+    remove(TEMP_PATH_FILE);
     int flags = 0;
     nftw(input_arg, save_file_paths, 20, flags);
 
@@ -205,12 +229,7 @@ int main(int argc, char *argv[])
     while ((numchars = getline(&line, &len, tmp)) != -1) {
       // remove \n at end of line
       line[numchars - 1] = '\0'; numchars--;
-
-      // alloc new space for new filenames, i dont understand this
-      char *file = calloc(4096, sizeof(char));
-      strcpy(file, line);
-
-      index_file(table, file);
+      index_file(table, line);
     }
 
     free(line);
@@ -222,7 +241,7 @@ int main(int argc, char *argv[])
   // print to output
   FILE *output_fp;
   output_fp = fopen(output_file, "w");
-  print_list(output_fp, table);
+  print_table(output_fp, table);
   fclose(output_fp);
 
   // NEED to fix SLDestroy to work with Record and Term structures

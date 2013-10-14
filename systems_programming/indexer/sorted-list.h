@@ -13,7 +13,7 @@ int compareStrings(void *p1, void *p2);
 
 typedef struct Node* NodePtr;
 typedef struct Node {
-    void*   data;
+    void *  data;
     NodePtr next;
     int     refCount;
 } Node;
@@ -31,8 +31,8 @@ typedef struct Node {
  * You will be given a comparator function when a new sorted list is
  * created.
  */
-
 typedef int (*CompareFuncT)(void *, void *);
+typedef void (*DestroyFuncT)(void *);
 
 /*
  * Sorted list type.  You need to fill in the type as part of your implementation.
@@ -40,7 +40,8 @@ typedef int (*CompareFuncT)(void *, void *);
 typedef struct SortedList {
     size_t       size;
     NodePtr      front;
-    CompareFuncT cf;
+    CompareFuncT compare_func;
+    DestroyFuncT destroy_func;
 } SortedList;
 typedef struct SortedList* SortedListPtr;
 
@@ -60,16 +61,11 @@ typedef struct SortedListIterator* SortedListIteratorPtr;
  *
  * If the function succeeds, it returns a (non-NULL) SortedListT object.
  * Else, it returns NULL.
- *
- * You need to fill in this function as part of your implementation.
  */
-
-SortedListPtr SLCreate(CompareFuncT cf);
+SortedListPtr SLCreate(CompareFuncT compare_func, DestroyFuncT destroy_func);
 
 /*
  * SLDestroy destroys a list, freeing all dynamically allocated memory.
- *
- * You need to fill in this function as part of your implementation.
  */
 void SLDestroy(SortedListPtr list);
 
@@ -81,10 +77,7 @@ void SLDestroy(SortedListPtr list);
  * order.
  *
  * If the function succeeds, it returns 1.  Else, it returns 0.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 int SLInsert(SortedListPtr list, void *newObj);
 
 NodePtr SLFind(SortedListPtr list, void *target);
@@ -95,10 +88,7 @@ NodePtr SLFind(SortedListPtr list, void *target);
  * should be maintained.
  *
  * If the function succeeds, it returns 1.  Else, it returns 0.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 int SLRemove(SortedListPtr list, void *newObj);
 
 
@@ -108,10 +98,7 @@ int SLRemove(SortedListPtr list, void *newObj);
  *
  * If the function succeeds, it returns a non-NULL SortedListIterT object.
  * Else, it returns NULL.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 SortedListIteratorPtr SLCreateIterator(SortedListPtr list);
 
 
@@ -120,10 +107,7 @@ SortedListIteratorPtr SLCreateIterator(SortedListPtr list);
  * SLCreateIterator().  Note that this function should destroy the
  * iterator but should NOT affectt the original list used to create
  * the iterator in any way.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 void SLDestroyIterator(SortedListIteratorPtr iter);
 
 
@@ -138,10 +122,7 @@ void SLDestroyIterator(SortedListIteratorPtr iter);
  * to some object in the list as the next one to be returned but that
  * object is removed from the list using SLRemove() before SLNextItem()
  * is called.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 void *SLNextItem(SortedListIteratorPtr iter);
 
 #endif

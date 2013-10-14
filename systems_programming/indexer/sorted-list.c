@@ -13,7 +13,6 @@ int compareInts(void *p1, void *p2)
 int compareDoubles(void *p1, void *p2)
 {
 	double d1 = *(double*)p1;
-
   double d2 = *(double*)p2;
 
 	return (d1 < d2) ? -1 : ((d1 > d2) ? 1 : 0);
@@ -34,23 +33,19 @@ int compareStrings(void *p1, void *p2)
  *
  * If the function succeeds, it returns a (non-NULL) SortedListT object.
  * Else, it returns NULL.
- *
- * You need to fill in this function as part of your implementation.
  */
-
-SortedListPtr SLCreate(CompareFuncT cf)
+SortedListPtr SLCreate(CompareFuncT compare_func, DestroyFuncT destroy_func)
 {
-    SortedListPtr slPtr = (SortedListPtr)malloc(sizeof(SortedList));
+    SortedListPtr slPtr = (SortedListPtr) malloc(sizeof(SortedList));
     slPtr->front = NULL;
     slPtr->size  = 0;
-    slPtr->cf    = cf;
+    slPtr->compare_func = compare_func;
+    slPtr->destroy_func = destroy_func;
     return slPtr;
 }
 
 /*
  * SLDestroy destroys a list, freeing all dynamically allocated memory.
- *
- * You need to fill in this function as part of your implementation.
  */
 void SLDestroy(SortedListPtr list)
 {
@@ -64,7 +59,7 @@ void SLDestroy(SortedListPtr list)
     while (ptr != NULL) {
         prevPtr = ptr;
         ptr = ptr->next;
-        free(prevPtr->data);
+        list->destroy_func(prevPtr->data);
         free(prevPtr);
     }
     free(list);
@@ -78,10 +73,7 @@ void SLDestroy(SortedListPtr list)
  * order.
  *
  * If the function succeeds, it returns 1.  Else, it returns 0.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 int SLInsert(SortedListPtr list, void *newObj)
 {
     // Initialize node to be inserted
@@ -102,7 +94,7 @@ int SLInsert(SortedListPtr list, void *newObj)
     NodePtr prevPtr = NULL;
     while (ptr) {
         void* ptrData = ptr->data;
-        int compare = list->cf(newObj, ptrData);
+        int compare = list->compare_func(newObj, ptrData);
 
         // Insert at beginning of list
         if (compare < 0 && prevPtr == NULL) {
@@ -132,7 +124,7 @@ int SLInsert(SortedListPtr list, void *newObj)
 
         // Insert somewhere in middle of list
         void* nextData  = nextPtr->data;
-        int compareNext = list->cf(newObj, nextData);
+        int compareNext = list->compare_func(newObj, nextData);
         // if newObj less than current and bigger than next, insert after ptr
         if (compare > 0 && compareNext < 0) {
             newNode->next = nextPtr;
@@ -155,7 +147,7 @@ int SLInsert(SortedListPtr list, void *newObj)
 NodePtr SLFind(SortedListPtr list, void *target) {
     NodePtr ptr = list->front;
     while (ptr) {
-        if (list->cf(ptr->data, target) == 0) {
+        if (list->compare_func(ptr->data, target) == 0) {
             return ptr;
         }
         ptr = ptr->next;
@@ -168,10 +160,7 @@ NodePtr SLFind(SortedListPtr list, void *target) {
  * should be maintained.
  *
  * If the function succeeds, it returns 1.  Else, it returns 0.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 int SLRemove(SortedListPtr list, void *newObj)
 {
     if (list->size == 0) {
@@ -184,7 +173,7 @@ int SLRemove(SortedListPtr list, void *newObj)
     // CANNOT REMOVE IF ITERATOR POINTING AT IT
     while (ptr != NULL) {
         void* ptrData = ptr->data;
-        int compare = list->cf(newObj, ptrData);
+        int compare = list->compare_func(newObj, ptrData);
 
         if (compare == 0 && prevPtr == NULL && ptr->refCount == 0) { // Remove first element
             list->front = ptr->next;
@@ -223,10 +212,7 @@ int SLRemove(SortedListPtr list, void *newObj)
  *
  * If the function succeeds, it returns a non-NULL SortedListIterT object.
  * Else, it returns NULL.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
     if (list->size == 0) {
       return NULL;
@@ -245,10 +231,7 @@ SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
  * SLCreateIterator().  Note that this function should destroy the
  * iterator but should NOT affectt the original list used to create
  * the iterator in any way.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 void SLDestroyIterator(SortedListIteratorPtr iter) {
     if (iter->ptr != NULL) {
         iter->ptr->refCount--;
@@ -268,10 +251,7 @@ void SLDestroyIterator(SortedListIteratorPtr iter) {
  * to some object in the list as the next one to be returned but that
  * object is removed from the list using SLRemove() before SLNextItem()
  * is called.
- *
- * You need to fill in this function as part of your implementation.
  */
-
 void *SLNextItem(SortedListIteratorPtr iter) {
     if (iter->ptr == NULL) {
         return NULL;
