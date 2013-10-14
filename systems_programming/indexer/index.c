@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE 500
+/*#define _XOPEN_SOURCE 500 // comment this line out if on OSX*/
 #define _GNU_SOURCE
 #define TEMP_PATH_FILE ".file_paths.tmp"
 
@@ -79,6 +79,8 @@ void print_list(FILE* fp, SortedListPtr table) {
 void index_file(SortedListPtr table, char *filename) {
   FILE *input_fp;
   input_fp = fopen(filename, "r");
+
+  printf("indexing %s\n", filename);
 
   if (input_fp == NULL) {
     fprintf(stderr, "Error: %s does not exist\n", filename);
@@ -206,28 +208,55 @@ int main(int argc, char *argv[])
   char *input_arg = argv[2];
   char *output_file = argv[1];
 
-  int flags = 0;
-  nftw(input_arg, save_file_paths, 20, flags);
-
   struct stat info;
   lstat(input_arg, &info);
 
-  /*if (S_ISDIR(info.st_mode)) {*/
-    /*index_dir(table, input_arg);*/
-  /*}*/
 
   if (S_ISREG(info.st_mode)) {
     index_file(table, input_arg);
+
+    FILE *output_fp;
+    output_fp = fopen(output_file, "w");
+    print_list(output_fp, table);
+    fclose(output_fp);
   }
 
-  FILE *output_fp;
-  output_fp = fopen(output_file, "w");
+  if (S_ISDIR(info.st_mode)) {
+    int flags = 0;
+    nftw(input_arg, save_file_paths, 20, flags);
+
+    // call index_file for each file in TEMP_PATH_FILE
+    FILE *tmp;
+    tmp = fopen(TEMP_PATH_FILE, "r");
+
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t numchars;
+
+    while ((numchars = getline(&line, &len, tmp)) != -1) {
+      // NEED TO REMOVE \n at end of line
+      line[numchars - 1] = '\0'; numchars--;
+      printf("open %s\n", line);
+      index_file(table, line);
+    }
+
+    /*free(line);*/
+    fclose(tmp);
+
+    FILE *output_fp;
+    output_fp = fopen(output_file, "w");
+    print_list(output_fp, table);
+    fclose(output_fp);
+  }
+
+  /*FILE *output_fp;*/
+  /*output_fp = fopen(output_file, "w");*/
   // if output_file exists, need to prompt user if the want to rewrite
 
-  print_list(output_fp, table);
+  /*print_list(output_fp, table);*/
 
   SLDestroy(table);
 
-  fclose(output_fp);
+  /*fclose(output_fp);*/
   exit(0);
 }
