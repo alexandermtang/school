@@ -111,13 +111,13 @@ void index_file(SortedListPtr table, char *filename) {
       token = toLowerCase(token);
 
       Term *t = (Term *)malloc(sizeof(Term));
-      t->term = (char *)malloc((strlen(token) + 1) * sizeof(char));
+      t->term = malloc(strlen(token) + 1);
       strcpy(t->term, token);
 
       NodePtr term_node = SLFind(table, t);
 
       // alloc new space for new filenames, i dont understand this
-      char *file = (char *)malloc((strlen(filename) + 1) * sizeof(char));
+      char *file = malloc(strlen(filename) + 1);
       strcpy(file, filename);
 
       if (term_node) {
