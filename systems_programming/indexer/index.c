@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <ftw.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +7,8 @@
 
 #include "sorted-list.h"
 #include "tokenizer.h"
+
+#define TEMP_PATH_FILE ".file_paths.tmp"
 
 typedef struct Term {
   char *term;
@@ -172,6 +175,21 @@ void index_dir(SortedListPtr table, char *dirname) {
   closedir(dir);
 }
 
+int save_file_paths(const char *fpath, const struct stat *sb,
+             int tflag, struct FTW *ftwbuf)
+{
+  FILE *tmp;
+  tmp = fopen(TEMP_PATH_FILE, "a");
+
+  // fpath cannot contain ".file_paths.tmp"
+  if (tflag == FTW_F && (strstr(fpath, TEMP_PATH_FILE) == NULL)) {
+    fprintf(tmp, "%s\n", fpath);
+  }
+
+  fclose(tmp);
+
+  return 0;
+}
 int main(int argc, char *argv[])
 {
   if (argc != 3) {
@@ -179,27 +197,31 @@ int main(int argc, char *argv[])
     fprintf(stderr, "./index <inverted-index file name> <directory or file name>\n");
     exit(0);
   }
+  remove(TEMP_PATH_FILE);
 
   SortedListPtr table = SLCreate(compareTerms);
 
   char *input_arg = argv[2];
   char *output_file = argv[1];
 
+  int flags = 0;
+  nftw(input_arg, save_file_paths, 20, flags);
+
   struct stat info;
   lstat(input_arg, &info);
 
-  if (S_ISDIR(info.st_mode)) {
-    index_dir(table, input_arg);
-  }
+  /*if (S_ISDIR(info.st_mode)) {*/
+    /*index_dir(table, input_arg);*/
+  /*}*/
 
-  if (S_ISREG(info.st_mode)) {
-    index_file(table, input_arg);
-  }
+  /*if (S_ISREG(info.st_mode)) {*/
+    /*index_file(table, input_arg);*/
+  /*}*/
 
   FILE *output_fp;
   output_fp = fopen(output_file, "w");
+  // if output_file exists, need to prompt user if the want to rewrite
 
-  /*print_list(stdout, table);*/
   print_list(output_fp, table);
 
   SLDestroy(table);
