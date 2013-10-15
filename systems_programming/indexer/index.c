@@ -186,6 +186,21 @@ int save_file_paths(const char *fpath, const struct stat *sb,
   return 0;
 }
 
+int is_hidden_file(char *filename) {
+  char *token;
+  TokenizerT *tokenizer = TKCreate("/", filename);
+
+  while ((token = TKGetNextToken(tokenizer))) {
+    if (token[0] == '.' && strcmp(token, ".") != 0 && strcmp(token, "..") != 0) {
+      free(token);
+      return 1;
+    }
+   free(token);
+  }
+
+  return 0;
+}
+
 int main(int argc, char *argv[])
 {
   if (argc != 3) {
@@ -227,7 +242,11 @@ int main(int argc, char *argv[])
     while ((numchars = getline(&line, &len, tmp)) != -1) {
       // remove \n at end of line
       line[numchars - 1] = '\0'; numchars--;
-      index_file(table, line);
+
+      if (!is_hidden_file(line)) {
+        index_file(table, line);
+        /*fprintf(stdout, "Indexing %s\n", line);*/
+      }
     }
 
     free(line);
