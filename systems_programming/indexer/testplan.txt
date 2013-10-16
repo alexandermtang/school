@@ -1,0 +1,51 @@
+Test Plan - Indexer
+- Craig Perkins
+- Alex Tang
+
+Test Case 1: Index single file in current directory
+
+Input:
+./index index file
+
+Expected:
+Result:
+
+Test Case 2: Index single file in subdirectory
+
+Input:
+./index index testdir/file
+
+Expected:
+Result:
+
+Test Case 3: Index all files in current directory
+
+Input:
+./index index .
+
+Expected:
+Result:
+
+Test Case 4: Index all files in subdirectory and subsubdirectories
+
+Input:
+./index index testdir
+
+Expected:
+Result:
+
+Test Case 5: Output file already exists
+
+Input:
+./index index testdir
+
+Expected:
+Result:
+
+Test Case 6: Index file using an absolute path
+
+Input:
+./index index /
+
+Expected:
+Result:

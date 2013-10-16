@@ -80,7 +80,7 @@ void print_table(FILE* fp, SortedListPtr table) {
       fflush(fp);
     }
 
-    fprintf(fp, "\n</list>\n\n");
+    fprintf(fp, "\n</list>\n");
     fflush(fp);
 
     SLDestroyIterator(iter2);
@@ -170,7 +170,7 @@ void index_file(SortedListPtr table, char *filename) {
   fclose(input_fp);
 }
 
-int save_file_paths(const char *fpath, const struct stat *sb,
+int save_file_path(const char *fpath, const struct stat *sb,
              int tflag, struct FTW *ftwbuf)
 {
   FILE *tmp;
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
   if (S_ISDIR(info.st_mode)) {
     remove(TEMP_PATH_FILE);
     int flags = 0;
-    nftw(input_arg, save_file_paths, 20, flags);
+    nftw(input_arg, save_file_path, 20, flags);
 
     // call index_file for each file in TEMP_PATH_FILE
     FILE *tmp;
