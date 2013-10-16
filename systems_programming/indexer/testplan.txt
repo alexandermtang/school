@@ -2,34 +2,34 @@ Test Plan - Indexer
 - Craig Perkins
 - Alex Tang
 
-Test Case 1: Index single file in current directory
+Test Case 1: output single file in current directory
 
 Input:
-./index index testfile
+./index output testfile
 
 Expected: testfile indexed in index
 Result: testfile indexed in index
 
-Test Case 2: Index single file in subdirectory
+Test Case 2: output single file in subdirectory
 
 Input:
-./index index testdir/file1
+./index output testdir/file1
 
 Expected: testdir/file1 indexed in index
 Result: testdir/file1 indexed in index
 
-Test Case 3: Index all files in current directory
+Test Case 3: output all files in current directory
 
 Input:
-./index index .
+./index output .
 
 Expected: All files in . indexed in index
 Result: All files in . indexed in index
 
-Test Case 4: Index all files in subdirectory and subsubdirectories
+Test Case 4: output all files in subdirectory and subsubdirectories
 
 Input:
-./index index testdir
+./index output testdir
 
 Expected: All files in testdir and its subdirectories indexed in index
 Result: All files in testdir and its subdirectories indexed in index
@@ -37,15 +37,15 @@ Result: All files in testdir and its subdirectories indexed in index
 Test Case 5: Output file already exists
 
 Input:
-./index index testdir
+./index output testdir
 
-Expected: index already exists. Overwrite? (y or n)
-Result: index already exists. Overwrite? (y or n)
+Expected: output already exists. Overwrite? (y or n)
+Result: output already exists. Overwrite? (y or n)
 
-Test Case 6: Index file using an absolute path
+Test Case 6: output file using an absolute path
 
 Input:
-./index index /ilab/users/alextang/code
+./index output /ilab/users/alextang/code
 
 Expected: All files in /ilab/users/alextang/code indexed in index
 Result: All files in /ilab/users/alextang/code indexed in index
