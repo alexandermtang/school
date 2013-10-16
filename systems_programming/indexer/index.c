@@ -53,13 +53,12 @@ void destroy_record(void *p)
   free(r);
 }
 
-char *toLowerCase(char *str)
+void toLowerCase(char *str)
 {
   int i = 0;
   for(i = 0; str[i]; i++) {
     str[i] = tolower(str[i]);
   }
-  return str;
 }
 
 void print_table(FILE* fp, SortedListPtr table) {
@@ -108,7 +107,7 @@ void index_file(SortedListPtr table, char *filename) {
     TokenizerT *tokenizer = TKCreate("", line);
     char *token;
     while ((token = TKGetNextToken(tokenizer))) {
-      token = toLowerCase(token);
+      toLowerCase(token);
 
       Term *t = (Term *)malloc(sizeof(Term));
       t->term = malloc(strlen(token) + 1);
@@ -163,6 +162,7 @@ void index_file(SortedListPtr table, char *filename) {
       }
       free(token);
     }
+    free(token);
     TKDestroy(tokenizer);
   }
 
@@ -191,14 +191,23 @@ int is_hidden_file(char *filename) {
   TokenizerT *tokenizer = TKCreate("/", filename);
 
   while ((token = TKGetNextToken(tokenizer))) {
-    if (token[0] == '.' && strcmp(token, ".") != 0 && strcmp(token, "..") != 0) {
+    if (token[0] == '.' &&
+        strcmp(token, ".") != 0 &&
+        strcmp(token, "..") != 0) {
       free(token);
+      TKDestroy(tokenizer);
       return 1;
     }
    free(token);
   }
-
+  free(token);
+  TKDestroy(tokenizer);
   return 0;
+}
+
+int file_exists(char *filename) {
+  struct stat info;
+  return (stat(filename, &info) == 0);
 }
 
 int main(int argc, char *argv[])
@@ -215,7 +224,7 @@ int main(int argc, char *argv[])
   char *output_file = argv[1];
 
   struct stat info;
-  lstat(input_arg, &info);
+  stat(input_arg, &info);
 
   if (!(S_ISREG(info.st_mode)) && !(S_ISDIR(info.st_mode))) {
     fprintf(stderr, "Error: %s is not a file or directory", input_arg);
@@ -255,12 +264,29 @@ int main(int argc, char *argv[])
     fclose(tmp);
   }
 
-  // TODO if output_file already exists, prompt user
-  // print to output
-  FILE *output_fp;
-  output_fp = fopen(output_file, "w");
-  print_table(output_fp, table);
-  fclose(output_fp);
+  // if output_file already exists, prompt user
+  if (file_exists(output_file)) {
+    printf("%s already exists. Overwrite? (y or n)\n", output_file);
+    char c = getchar();
+    while (!(c == 'y' || c == 'n')) {
+      c = getchar();
+    }
+
+    if (c == 'y') {
+      printf("Indexing %s...\n", input_arg);
+      FILE *output_fp;
+      output_fp = fopen(output_file, "w");
+      print_table(output_fp, table);
+      fclose(output_fp);
+    } else {
+      printf("Not indexing %s\n", input_arg);
+    }
+  } else {
+      FILE *output_fp;
+      output_fp = fopen(output_file, "w");
+      print_table(output_fp, table);
+      fclose(output_fp);
+  }
 
   // NEED to fix SLDestroy to work with Record and Term structures
   SLDestroy(table);
