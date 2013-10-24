@@ -213,7 +213,7 @@ int file_exists(char *filename) {
 int main(int argc, char *argv[])
 {
   if (argc != 3) {
-    fprintf(stderr, "Error: incorrect format, expecting: \n");
+    fprintf(stderr, "Error: incorrect format, expecting:\n");
     fprintf(stderr, "./index <inverted-index file name> <directory or file name>\n");
     exit(0);
   }
@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
   stat(input_arg, &info);
 
   if (!(S_ISREG(info.st_mode)) && !(S_ISDIR(info.st_mode))) {
-    fprintf(stderr, "Error: %s is not a file or directory", input_arg);
+    fprintf(stderr, "Error: %s is not a file or directory\n", input_arg);
     exit(0);
   }
 
@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
     }
 
     if (c == 'y') {
-      printf("Indexing %s...\n", input_arg);
+      printf("Indexing %s\n", input_arg);
       FILE *output_fp;
       output_fp = fopen(output_file, "w");
       print_table(output_fp, table);
