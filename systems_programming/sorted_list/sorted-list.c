@@ -58,6 +58,13 @@ void SLDestroy(SortedListPtr list)
 
 int SLInsert(SortedListPtr list, void *newObj)
 {
+
+    if (list == NULL) {
+        return 0;
+    }
+    if (newObj == NULL) {
+        return 0;
+    }
     // Initialize node to be inserted
     NodePtr newNode = (NodePtr) malloc(sizeof(Node));
     newNode->data = newObj;
@@ -182,11 +189,12 @@ SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
       return NULL;
     }
 
-    SortedListIteratorPtr slip = (SortedListIteratorPtr) malloc(sizeof(SortedListIterator));
-    slip->ptr = list->front;
-    slip->ptr->iterCount++;
+    SortedListIteratorPtr iter = (SortedListIteratorPtr) malloc(sizeof(SortedListIterator));
+    iter->ptr = list->front;
+    iter->ptr->iterCount++;
+    iter->isFront = 1;
 
-    return slip;
+    return iter;
 };
 
 
@@ -223,16 +231,23 @@ void SLDestroyIterator(SortedListIteratorPtr iter) {
  */
 
 void *SLNextItem(SortedListIteratorPtr iter) {
-    if (iter->ptr == NULL) {
+    if (iter == NULL || iter->ptr == NULL) {
         return NULL;
     }
 
-    void* nodeData = iter->ptr->data;
+    if (iter->isFront) {
+        iter->isFront = 0;
+        return iter->ptr->data;
+    }
+
     iter->ptr->iterCount--;
     iter->ptr = iter->ptr->next;
     if (iter->ptr != NULL) {
         iter->ptr->iterCount++;
+    } else {
+        return NULL;
     }
+    void* nodeData = iter->ptr->data;
 
     return nodeData;
 };

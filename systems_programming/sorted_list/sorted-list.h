@@ -45,6 +45,7 @@ typedef struct SortedList* SortedListPtr;
  */
 typedef struct SortedListIterator {
     NodePtr ptr;
+    unsigned int isFront;
 } SortedListIterator;
 typedef struct SortedListIterator* SortedListIteratorPtr;
 
