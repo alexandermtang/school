@@ -5,7 +5,8 @@
 
 bool isnum(char *str)
 {
-    while ((c = *str++) != NULL) {
+    char c;
+    while ((c = *str++) != '\0') {
         if (!isdigit(c)) {
             return false;
         }
