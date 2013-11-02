@@ -22,6 +22,7 @@ void destroyStrings(void *p);
 void add_record(char *word, char *filename);
 struct Record * find_record(char *word);
 void delete_all_records(void);
+void print_all_records(void);
 void print_list(SortedList *list);
 void parse_file(char *file);
 
@@ -152,39 +153,89 @@ void parse_file(char *file)
   fclose(fp);
 }
 
-void search_and(void)
+void search_and(char *line)
 {
+  TokenizerT *tokenizer = TKCreate(" \n", line);
+  char *token = TKGetNextToken(tokenizer);
+  free(token);  // get rid of "sa" token
+  struct Record *r;
+  SortedList *list = SLCreate(compareStrings, destroyStrings);
 
+  // initialize list to filenames of first record
+  token = TKGetNextToken(tokenizer);
+  SortedListIterator *iter = SLCreateIterator(r->filenames);
+  char *file;
+  while((file = (char *)SLNextItem(iter)) != NULL) {
+    char *tmp = malloc(strlen(file) + 1);
+    strcpy(tmp,  file);
+    SLInsert(list, tmp);
+  }
+  SLDestroyIterator(iter);
+
+  while ((token = TKGetNextToken(tokenizer)) != NULL) {
+    SortedList *tmp_list = SLCreate(compareStrings, destroyStrings);
+    r = find_record(token);
+
+    if (r == NULL) {
+      printf("String %s not found.\n", token);
+      continue;
+    }
+
+    SortedListIterator *iter = SLCreateIterator(r->filenames);
+    char *file;
+    while((file = (char *)SLNextItem(iter)) != NULL) {
+      char *tmp = malloc(strlen(file) + 1);
+      strcpy(tmp,  file);
+      SLInsert(tmp_list, tmp);
+    }
+    SLDestroyIterator(iter);
+
+    // find intersection of list and tmp_list and rewrite list
+
+
+
+    free(token);
+    SLDestroy(tmp_list);
+  }
+
+  print_list(list);
+  print_all_records();
+
+  SLDestroy(list);
+  free(token);
+  TKDestroy(tokenizer);
 }
 
 void search_or(char *line)
 {
   TokenizerT *tokenizer = TKCreate(" \n", line);
-  char *token;
+  char *token = TKGetNextToken(tokenizer);
+  free(token);  // get rid of "so" token
   struct Record *r;
   SortedList *list = SLCreate(compareStrings, destroyStrings);
 
   while ((token = TKGetNextToken(tokenizer)) != NULL) {
-    if (strcmp(token, "so") != 0) {
-      r = find_record(token);
+    r = find_record(token);
 
-      if (r == NULL) {
-        printf("String %s not found.\n", token);
-        continue;
-      }
-
-      SortedListIterator *iter = SLCreateIterator(r->filenames);
-      char *file;
-      while((file = (char *)SLNextItem(iter)) != NULL) {
-        SLInsert(list, file);
-      }
-      SLDestroyIterator(iter);
+    if (r == NULL) {
+      printf("String %s not found.\n", token);
+      continue;
     }
+
+    SortedListIterator *iter = SLCreateIterator(r->filenames);
+    char *file;
+    while((file = (char *)SLNextItem(iter)) != NULL) {
+      char *tmp = malloc(strlen(file) + 1);
+      strcpy(tmp,  file);
+      SLInsert(list, tmp);
+    }
+    SLDestroyIterator(iter);
 
     free(token);
   }
 
   print_list(list);
+  /*print_all_records();*/
 
   SLDestroy(list);
   free(token);
@@ -198,11 +249,25 @@ void print_list(SortedList *list)
   }
 
   SortedListIterator *iter = SLCreateIterator(list);
-  char *file;
-  while((file = (char *)SLNextItem(iter)) != NULL) {
-    printf("%s\n", file);
+  char *item;
+  while((item = (char *)SLNextItem(iter)) != NULL) {
+    printf("%s\n", item);
   }
   SLDestroyIterator(iter);
+}
+
+void print_all_records(void)
+{
+  struct Record *s, *tmp;
+
+  HASH_ITER(hh, records, s, tmp) {
+    SortedListIterator *iter = SLCreateIterator(s->filenames);
+    char *file;
+    while((file = (char *)SLNextItem(iter)) != NULL) {
+      printf("word %s \t id %d \t file %s\n", s->word, s->id, file);
+    }
+    SLDestroyIterator(iter);
+  }
 }
 
 int main(int argc, char **argv)
@@ -221,15 +286,7 @@ int main(int argc, char **argv)
 
   parse_file(filename);
 
-  struct Record *s, *tmp;
-  // print records
-  HASH_ITER(hh, records, s, tmp) {
-    SortedListIterator *iter = SLCreateIterator(s->filenames);
-    char *file;
-    while((file = (char *)SLNextItem(iter)) != NULL) {
-      printf("word %s id %d file %s\n", s->word, s->id, file);
-    }
-  }
+  print_all_records();
 
   unsigned int num_records;
   num_records = HASH_COUNT(records);
@@ -256,15 +313,13 @@ int main(int argc, char **argv)
     }
 
     if (strcmp(cmd, "sa") == 0) {
-      search_and();
-
+      search_and(linep);
       printf("$ ");
       continue;
     }
 
     if (strcmp(cmd, "so") == 0) {
       search_or(linep);
-
       printf("$ ");
       continue;
     }

@@ -1,5 +1,5 @@
 <list> am
-testdir/file1 1 testdir/file2 1 testdir/subtestdir/file3 1
+testdir/file1 1 testdir/file2
 </list>
 <list> file1
 testdir/file1 1
