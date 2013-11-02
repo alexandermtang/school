@@ -17,7 +17,6 @@ struct Record {
 
 int djb2(unsigned char *str)
 {
-  printf("%s\n", str);
   int c, hash = 5381;
 
   while ((c = *str++))
@@ -35,27 +34,29 @@ void add_record(struct Record *table, char *word, char *filename)
 {
   struct Record *r;
 
-  int id = djb2((unsigned char *) word);
+  int record_id = djb2((unsigned char *) word);
 
-  HASH_FIND_INT(table, &id, r);
+  HASH_FIND_INT(table, &record_id, r);
+  // linear probing to resolve collisions
   while (r != NULL) {
     // found word
     if (strcmp(r->word, word) == 0) {
       break;
     }
+    printf("collisions\n");
 
-    // loop to resolve collisions
-    id++;
-    HASH_FIND_INT(table, &id, r);
+    record_id++;
+    HASH_FIND_INT(table, &record_id, r);
   }
 
   if (r == NULL) {
     // found empty spot, proceed to add
-    r = malloc(sizeof(struct Record));
-    r->id = id;
+    r = (struct Record *)malloc(sizeof(struct Record));
+    r->id = record_id;
     r->word = word;
     r->filenames = SLCreate(compareStrings, destroyStrings);
     SLInsert(r->filenames, filename);
+    printf("inserting word %s id %d\n", r->word, r->id);
 
     HASH_ADD_INT(table, id, r);
   } else {
@@ -81,9 +82,7 @@ void parse_file(FILE *fp, struct Record *table)
       word = (char *)malloc(strlen(token) + 1);
       strcpy(word, token);
     } else if (strcmp(token, "</list>") == 0) {
-      // do nothing, just clear word and filename
-      word = NULL;
-      filename = NULL;
+      // do nothing
     } else {
       // iterate through filenames
       do {
@@ -98,6 +97,10 @@ void parse_file(FILE *fp, struct Record *table)
 
     free(token);
     TKDestroy(tokenizer);
+  }
+
+  if (linep) {
+    free(linep);
   }
 }
 
@@ -135,6 +138,9 @@ int main(int argc, char **argv)
   HASH_ITER(hh, table, s, tmp) {
     printf("word %s id %d\n", s->word, s->id);
   }
+  unsigned int num_records;
+  num_records = HASH_COUNT(table);
+  printf("numrecords %u\n", num_records);
 
   char *linep = NULL;
   size_t linecap = 0;
@@ -143,11 +149,22 @@ int main(int argc, char **argv)
   // TODO use tokenizer not strtok!
   printf("$ ");
   while ((linelen = getline(&linep, &linecap, stdin)) != -1) {
-    // remove \n at end of linep
-    linep[linelen - 1] = '\0'; linelen--;
-
-    char *cmd = strtok(linep, " ");
+    TokenizerT *tokenizer = TKCreate(" \n", linep);
+    char *cmd = TKGetNextToken(tokenizer);
     if (strcmp(cmd, "q") == 0) {
+      // destroy table and free everything
+      struct Record *current_record, *tmp;
+
+      HASH_ITER(hh, table, current_record, tmp) {
+        HASH_DEL(table, current_record);
+        free(current_record->word);
+        SLDestroy(current_record->filenames);
+        free(current_record);
+      }
+
+      free(table);
+      free(cmd);
+      TKDestroy(tokenizer);
       return 0;
     }
 
@@ -167,6 +184,13 @@ int main(int argc, char **argv)
 
     printf("Error: %s: invalid command.\n", cmd);
     printf("$ ");
+
+    free(cmd);
+    TKDestroy(tokenizer);
+  }
+
+  if(linep) {
+    free(linep);
   }
 
   return 0;
