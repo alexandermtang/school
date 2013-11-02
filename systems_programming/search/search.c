@@ -168,6 +168,11 @@ void search_and(char *line)
 
   // check if first token is valid word name
   token = TKGetNextToken(tokenizer);
+  if (token == NULL) {
+    free(token);
+    TKDestroy(tokenizer);
+    return;
+  }
   r = find_record(token);
   if (r == NULL) {
     free(token);
@@ -211,7 +216,6 @@ void search_and(char *line)
   free(token);
   TKDestroy(tokenizer);
 }
-
 
 // list1 must be writeable, list2 is read-only
 SortedListPtr ll_and(SortedListPtr list1, SortedListPtr list2)
