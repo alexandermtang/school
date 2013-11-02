@@ -65,8 +65,30 @@ void add_record(char *word, char *filename)
   }
 }
 
-void parse_file(FILE *fp)
+struct Record * find_record(char* word)
 {
+  struct Record *r;
+
+  return r;
+}
+
+void delete_all_records(void)
+{
+  struct Record *current_record, *tmp;
+
+  HASH_ITER(hh, records, current_record, tmp) {
+    HASH_DEL(records, current_record);
+    free(current_record->word);
+    SLDestroy(current_record->filenames);
+    free(current_record);
+  }
+}
+
+void parse_file(char *file)
+{
+  FILE *fp;
+  fp = fopen(file, "r");
+
   // parse file into a hashtable of linked lists
   char *linep = NULL;
   size_t linecap = 0;
@@ -78,6 +100,7 @@ void parse_file(FILE *fp)
     token = TKGetNextToken(tokenizer);
 
     if (strcmp(token, "<list>") == 0) {
+      free(token);
       // set current word
       token = TKGetNextToken(tokenizer);
       word = (char *)malloc(strlen(token) + 1);
@@ -103,6 +126,8 @@ void parse_file(FILE *fp)
   if (linep) {
     free(linep);
   }
+
+  fclose(fp);
 }
 
 void search_and(void)
@@ -129,10 +154,7 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  FILE *fp;
-  fp = fopen(filename, "r");
-
-  parse_file(fp);
+  parse_file(filename);
 
   struct Record *s, *tmp;
   HASH_ITER(hh, records, s, tmp) {
@@ -147,20 +169,15 @@ int main(int argc, char **argv)
   ssize_t linelen;
 
   printf("$ ");
+
+  // WHAT IS THE RIGHT WAY TO READ A LINE FROM STDIN
   while ((linelen = getline(&linep, &linecap, stdin)) != -1) {
     TokenizerT *tokenizer = TKCreate(" \n", linep);
     char *cmd = TKGetNextToken(tokenizer);
 
     if (strcmp(cmd, "q") == 0) {
-      // destroy table and free everything
-      struct Record *current_record, *tmp;
-
-      HASH_ITER(hh, records, current_record, tmp) {
-        HASH_DEL(records, current_record);
-        free(current_record->word);
-        SLDestroy(current_record->filenames);
-        free(current_record);
-      }
+      // delete records and free everything
+      delete_all_records();
 
       free(cmd);
       TKDestroy(tokenizer);
