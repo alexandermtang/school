@@ -22,10 +22,12 @@ void destroyStrings(void *p);
 void add_record(char *word, char *filename);
 struct Record * find_record(char *word);
 void delete_all_records(void);
-void print_all_records(void);
-void print_list(SortedList *list);
 void parse_file(char *file);
+void search_and(char* line);
 SortedListPtr ll_and(SortedListPtr list1, SortedListPtr list2);
+void search_or(char* line);
+void print_list(SortedList *list);
+void print_all_records(void);
 
 int djb2(unsigned char *str)
 {
@@ -55,8 +57,6 @@ void add_record(char *word, char *filename)
     if (strcmp(r->word, word) == 0) {
       break;
     }
-
-    printf("collision %s\n", word);
 
     record_id++;
     HASH_FIND_INT(records, &record_id, r);
@@ -149,9 +149,7 @@ void parse_file(char *file)
     TKDestroy(tokenizer);
   }
 
-  if (linep) {
-    free(linep);
-  }
+  free(linep);
 
   fclose(fp);
 }
@@ -195,7 +193,10 @@ void search_and(char *line)
     r = find_record(token);
 
     if (r == NULL) {
-      break;
+      SLDestroy(list);
+      free(token);
+      TKDestroy(tokenizer);
+      return;
     }
 
     list = ll_and(list, r->filenames);
@@ -333,8 +334,6 @@ int main(int argc, char **argv)
 
   printf("$ ");
 
-  // WHAT IS THE RIGHT WAY TO READ A LINE FROM STDIN
-  // THIS DOES NOT PASS VALGRIND
   while ((linelen = getline(&linep, &linecap, stdin)) != -1) {
     if (linep[0] == '\n') {
       printf("$ ");
@@ -350,7 +349,8 @@ int main(int argc, char **argv)
 
       free(cmd);
       TKDestroy(tokenizer);
-      break;
+      free(linep);
+      return 0;
     }
 
     if (strcmp(cmd, "sa") == 0) {
@@ -378,9 +378,7 @@ int main(int argc, char **argv)
 
   delete_all_records();
 
-  if(linep) {
-    free(linep);
-  }
+  free(linep);
 
   return 0;
 }
