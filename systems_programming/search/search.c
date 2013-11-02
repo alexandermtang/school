@@ -56,6 +56,8 @@ void add_record(char *word, char *filename)
       break;
     }
 
+    printf("collision %s\n", word);
+
     record_id++;
     HASH_FIND_INT(records, &record_id, r);
   }
@@ -154,17 +156,30 @@ void parse_file(char *file)
   fclose(fp);
 }
 
+/*SortedList * SLCopy(SortedList * old_list, SortedList * new_list)*/
+/*{*/
+  /*return NULL;*/
+/*}*/
+
 void search_and(char *line)
 {
   TokenizerT *tokenizer = TKCreate(" \n", line);
   char *token = TKGetNextToken(tokenizer);
   free(token);  // get rid of "sa" token
   struct Record *r;
+
+  // check if first token is valid word name
+  token = TKGetNextToken(tokenizer);
+  r = find_record(token);
+  if (r == NULL) {
+    free(token);
+    TKDestroy(tokenizer);
+    return;
+  }
+
   SortedList *list = SLCreate(compareStrings, destroyStrings);
 
   // initialize list to filenames of first record
-  token = TKGetNextToken(tokenizer);
-  r = find_record(token);
   SortedListIterator *iter = SLCreateIterator(r->filenames);
   char *file;
   while((file = (char *)SLNextItem(iter)) != NULL) {
@@ -174,50 +189,56 @@ void search_and(char *line)
   }
   SLDestroyIterator(iter);
 
+  free(token);
+
   while ((token = TKGetNextToken(tokenizer)) != NULL) {
     r = find_record(token);
 
     if (r == NULL) {
-      printf("String %s not found.\n", token);
-      continue;
+      break;
     }
 
-    // find intersection of list and tmp_list and rewrite list
     list = ll_and(list, r->filenames);
 
     free(token);
   }
 
   print_list(list);
-  print_all_records();
+  /*print_all_records();*/
 
   SLDestroy(list);
   free(token);
   TKDestroy(tokenizer);
 }
 
+
+// list1 must be writeable, list2 is read-only
 SortedListPtr ll_and(SortedListPtr list1, SortedListPtr list2)
 {
-    SortedListPtr andlist = SLCreate(list1->compare_func, list1->destroy_func);
+  SortedListPtr andlist = SLCreate(list1->compare_func, list1->destroy_func);
 
-    NodePtr ptr1 = list1->front;
-    NodePtr ptr2 = list2->front;
+  NodePtr ptr1 = list1->front;
+  NodePtr ptr2 = list2->front;
 
-    while (ptr1 != NULL && ptr2 != NULL) {
-        int comp = list1->compare_func(ptr1->data, ptr2->data);
+  while (ptr1 != NULL && ptr2 != NULL) {
+    int comp = list1->compare_func(ptr1->data, ptr2->data);
 
-        if (comp == 0) {
-            SLInsert(andlist, ptr1->data);
-            ptr1 = ptr1->next;
-            ptr2 = ptr2->next;
-        } else if (comp < 0) {
-            ptr1 = ptr1->next;
-        } else {
-            ptr2 = ptr2->next;
-        }
+    if (comp == 0) {
+      char *data = (char *)ptr1->data;
+      char *item = malloc(strlen(data) + 1);
+      strcpy(item, data);
+      SLInsert(andlist, item);
+      ptr1 = ptr1->next;
+      ptr2 = ptr2->next;
+    } else if (comp < 0) {
+      ptr1 = ptr1->next;
+    } else {
+      ptr2 = ptr2->next;
     }
-    // SLDestroy(list1);
-    return andlist;
+  }
+
+  SLDestroy(list1);
+  return andlist;
 }
 
 void search_or(char *line)
@@ -282,6 +303,10 @@ void print_all_records(void)
     }
     SLDestroyIterator(iter);
   }
+
+  unsigned int num_records;
+  num_records = HASH_COUNT(records);
+  printf("number of records %u\n", num_records);
 }
 
 int main(int argc, char **argv)
@@ -302,10 +327,6 @@ int main(int argc, char **argv)
 
   print_all_records();
 
-  unsigned int num_records;
-  num_records = HASH_COUNT(records);
-  printf("numrecords %u\n", num_records);
-
   char *linep = NULL;
   size_t linecap = 0;
   ssize_t linelen;
@@ -313,7 +334,13 @@ int main(int argc, char **argv)
   printf("$ ");
 
   // WHAT IS THE RIGHT WAY TO READ A LINE FROM STDIN
+  // THIS DOES NOT PASS VALGRIND
   while ((linelen = getline(&linep, &linecap, stdin)) != -1) {
+    if (linep[0] == '\n') {
+      printf("$ ");
+      continue;
+    }
+
     TokenizerT *tokenizer = TKCreate(" \n", linep);
     char *cmd = TKGetNextToken(tokenizer);
 
@@ -323,18 +350,22 @@ int main(int argc, char **argv)
 
       free(cmd);
       TKDestroy(tokenizer);
-      return 0;
+      break;
     }
 
     if (strcmp(cmd, "sa") == 0) {
       search_and(linep);
       printf("$ ");
+      free(cmd);
+      TKDestroy(tokenizer);
       continue;
     }
 
     if (strcmp(cmd, "so") == 0) {
       search_or(linep);
       printf("$ ");
+      free(cmd);
+      TKDestroy(tokenizer);
       continue;
     }
 
@@ -344,6 +375,8 @@ int main(int argc, char **argv)
     free(cmd);
     TKDestroy(tokenizer);
   }
+
+  delete_all_records();
 
   if(linep) {
     free(linep);
