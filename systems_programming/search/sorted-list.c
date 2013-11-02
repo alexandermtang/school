@@ -218,7 +218,7 @@ int SLRemove(SortedListPtr list, void *newObj)
  * Else, it returns NULL.
  */
 SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
-    if (list->size == 0) {
+    if (list == NULL || list->size == 0) {
       return NULL;
     }
 
@@ -238,6 +238,10 @@ SortedListIteratorPtr SLCreateIterator(SortedListPtr list) {
  * the iterator in any way.
  */
 void SLDestroyIterator(SortedListIteratorPtr iter) {
+    if (iter == NULL) {
+      return;
+    }
+
     if (iter->ptr != NULL) {
         iter->ptr->refCount--;
     }

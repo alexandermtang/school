@@ -17,6 +17,14 @@ struct Record {
 
 struct Record *records = NULL;
 
+int djb2(unsigned char *str);
+void destroyStrings(void *p);
+void add_record(char *word, char *filename);
+struct Record * find_record(char *word);
+void delete_all_records(void);
+void print_list(SortedList *list);
+void parse_file(char *file);
+
 int djb2(unsigned char *str)
 {
   int c, hash = 5381;
@@ -57,7 +65,6 @@ void add_record(char *word, char *filename)
     r->word = word;
     r->filenames = SLCreate(compareStrings, destroyStrings);
     SLInsert(r->filenames, filename);
-    /*printf("inserting word %s id %d\n", r->word, r->id);*/
 
     HASH_ADD_INT(records, id, r);
   } else {
@@ -65,9 +72,24 @@ void add_record(char *word, char *filename)
   }
 }
 
-struct Record * find_record(char* word)
+// return NULL if not found
+struct Record * find_record(char *word)
 {
   struct Record *r;
+
+  int record_id = djb2((unsigned char *) word);
+  HASH_FIND_INT(records, &record_id, r);
+
+  // possible collision, linear probing
+  while (r != NULL) {
+    // found word
+    if (strcmp(r->word, word) == 0) {
+      break;
+    }
+
+    record_id++;
+    HASH_FIND_INT(records, &record_id, r);
+  }
 
   return r;
 }
@@ -135,9 +157,52 @@ void search_and(void)
 
 }
 
-void search_or(void)
+void search_or(char *line)
 {
+  TokenizerT *tokenizer = TKCreate(" \n", line);
+  char *token;
+  struct Record *r;
+  SortedList *list = SLCreate(compareStrings, destroyStrings);
 
+  while ((token = TKGetNextToken(tokenizer)) != NULL) {
+    if (strcmp(token, "so") != 0) {
+      r = find_record(token);
+
+      if (r == NULL) {
+        printf("String %s not found.\n", token);
+        continue;
+      }
+
+      SortedListIterator *iter = SLCreateIterator(r->filenames);
+      char *file;
+      while((file = (char *)SLNextItem(iter)) != NULL) {
+        SLInsert(list, file);
+      }
+      SLDestroyIterator(iter);
+    }
+
+    free(token);
+  }
+
+  print_list(list);
+
+  SLDestroy(list);
+  free(token);
+  TKDestroy(tokenizer);
+}
+
+void print_list(SortedList *list)
+{
+  if (list == NULL) {
+    return;
+  }
+
+  SortedListIterator *iter = SLCreateIterator(list);
+  char *file;
+  while((file = (char *)SLNextItem(iter)) != NULL) {
+    printf("%s\n", file);
+  }
+  SLDestroyIterator(iter);
 }
 
 int main(int argc, char **argv)
@@ -157,9 +222,15 @@ int main(int argc, char **argv)
   parse_file(filename);
 
   struct Record *s, *tmp;
+  // print records
   HASH_ITER(hh, records, s, tmp) {
-    printf("word %s id %d\n", s->word, s->id);
+    SortedListIterator *iter = SLCreateIterator(s->filenames);
+    char *file;
+    while((file = (char *)SLNextItem(iter)) != NULL) {
+      printf("word %s id %d file %s\n", s->word, s->id, file);
+    }
   }
+
   unsigned int num_records;
   num_records = HASH_COUNT(records);
   printf("numrecords %u\n", num_records);
@@ -192,7 +263,7 @@ int main(int argc, char **argv)
     }
 
     if (strcmp(cmd, "so") == 0) {
-      search_or();
+      search_or(linep);
 
       printf("$ ");
       continue;
