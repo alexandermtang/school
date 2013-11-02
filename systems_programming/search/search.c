@@ -259,6 +259,7 @@ void search_or(char *line)
 
     if (r == NULL) {
       printf("String %s not found.\n", token);
+      free(token);
       continue;
     }
 
