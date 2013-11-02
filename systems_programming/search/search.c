@@ -25,6 +25,7 @@ void delete_all_records(void);
 void print_all_records(void);
 void print_list(SortedList *list);
 void parse_file(char *file);
+SortedListPtr ll_and(SortedListPtr list1, SortedListPtr list2);
 
 int djb2(unsigned char *str)
 {
@@ -163,6 +164,7 @@ void search_and(char *line)
 
   // initialize list to filenames of first record
   token = TKGetNextToken(tokenizer);
+  r = find_record(token);
   SortedListIterator *iter = SLCreateIterator(r->filenames);
   char *file;
   while((file = (char *)SLNextItem(iter)) != NULL) {
@@ -173,7 +175,6 @@ void search_and(char *line)
   SLDestroyIterator(iter);
 
   while ((token = TKGetNextToken(tokenizer)) != NULL) {
-    SortedList *tmp_list = SLCreate(compareStrings, destroyStrings);
     r = find_record(token);
 
     if (r == NULL) {
@@ -181,21 +182,10 @@ void search_and(char *line)
       continue;
     }
 
-    SortedListIterator *iter = SLCreateIterator(r->filenames);
-    char *file;
-    while((file = (char *)SLNextItem(iter)) != NULL) {
-      char *tmp = malloc(strlen(file) + 1);
-      strcpy(tmp,  file);
-      SLInsert(tmp_list, tmp);
-    }
-    SLDestroyIterator(iter);
-
     // find intersection of list and tmp_list and rewrite list
-
-
+    list = ll_and(list, r->filenames);
 
     free(token);
-    SLDestroy(tmp_list);
   }
 
   print_list(list);
@@ -204,6 +194,30 @@ void search_and(char *line)
   SLDestroy(list);
   free(token);
   TKDestroy(tokenizer);
+}
+
+SortedListPtr ll_and(SortedListPtr list1, SortedListPtr list2)
+{
+    SortedListPtr andlist = SLCreate(list1->compare_func, list1->destroy_func);
+
+    NodePtr ptr1 = list1->front;
+    NodePtr ptr2 = list2->front;
+
+    while (ptr1 != NULL && ptr2 != NULL) {
+        int comp = list1->compare_func(ptr1->data, ptr2->data);
+
+        if (comp == 0) {
+            SLInsert(andlist, ptr1->data);
+            ptr1 = ptr1->next;
+            ptr2 = ptr2->next;
+        } else if (comp < 0) {
+            ptr1 = ptr1->next;
+        } else {
+            ptr2 = ptr2->next;
+        }
+    }
+    // SLDestroy(list1);
+    return andlist;
 }
 
 void search_or(char *line)
