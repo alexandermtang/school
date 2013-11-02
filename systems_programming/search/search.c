@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 #include "sorted-list.h"
+#include "tokenizer.h"
 #include "uthash.h"
 #include "util.h"
 
@@ -70,28 +71,31 @@ void parse_file(FILE *fp, struct Record *table)
   ssize_t linelen;
 
   while ((linelen = getline(&linep, &linecap, fp)) != -1) {
-    char *tok = strtok(linep, " ");
-    char *word = NULL;
-    char *filename;
+    TokenizerT *tokenizer = TKCreate(" ", linep);
+    char *token, *word = NULL, *filename;
+    token = TKGetNextToken(tokenizer);
 
-    if (strcmp(tok, "<list>") == 0) {
-      // change word
-      tok = strtok(linep, " ");
-      word = (char *)malloc(strlen(tok) + 1);
-      strcpy(word, tok);
-    } else if (strcmp(tok, "</list>") == 0) {
+    if (strcmp(token, "<list>") == 0) {
+      // set current word
+      token = TKGetNextToken(tokenizer);
+      word = (char *)malloc(strlen(token) + 1);
+      strcpy(word, token);
+    } else if (strcmp(token, "</list>") == 0) {
       // do nothing
     } else {
       // iterate through filenames
-      while (tok != NULL) {
-        if (!isnum(tok)) {
-          filename = (char *)malloc(strlen(tok) + 1);
-          strcpy(filename, tok);
+      do {
+        if (!isnum(token)) {
+          filename = (char *)malloc(strlen(token) + 1);
+          strcpy(filename, token);
           add_record(table, word, filename);
         }
-        tok = strtok(linep, " ");
-      }
+        free(token);
+      } while ((token = TKGetNextToken(tokenizer)));
     }
+
+    free(token);
+    TKDestroy(tokenizer);
   }
 }
 
@@ -134,6 +138,7 @@ int main(int argc, char **argv)
   size_t linecap = 0;
   ssize_t linelen;
 
+  // TODO use tokenizer not strtok!
   printf("$ ");
   while ((linelen = getline(&linep, &linecap, stdin)) != -1) {
     // remove \n at end of linep
