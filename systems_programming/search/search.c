@@ -17,13 +17,13 @@ struct Record {
 
 int djb2(unsigned char *str)
 {
-    int hash = 5381;
-    int c;
+  printf("%s\n", str);
+  int c, hash = 5381;
 
-    while ((c = *str++))
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+  while ((c = *str++))
+    hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
-    return (hash < 0) ? -hash : hash;
+  return (hash < 0) ? -hash : hash;
 }
 
 void destroyStrings(void *p) {
@@ -69,10 +69,10 @@ void parse_file(FILE *fp, struct Record *table)
   char *linep = NULL;
   size_t linecap = 0;
   ssize_t linelen;
+  char *token, *word = NULL, *filename;
 
   while ((linelen = getline(&linep, &linecap, fp)) != -1) {
-    TokenizerT *tokenizer = TKCreate(" ", linep);
-    char *token, *word = NULL, *filename;
+    TokenizerT *tokenizer = TKCreate(" \n", linep);
     token = TKGetNextToken(tokenizer);
 
     if (strcmp(token, "<list>") == 0) {
@@ -81,7 +81,9 @@ void parse_file(FILE *fp, struct Record *table)
       word = (char *)malloc(strlen(token) + 1);
       strcpy(word, token);
     } else if (strcmp(token, "</list>") == 0) {
-      // do nothing
+      // do nothing, just clear word and filename
+      word = NULL;
+      filename = NULL;
     } else {
       // iterate through filenames
       do {
