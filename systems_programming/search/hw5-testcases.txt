@@ -2,6 +2,9 @@ Test Cases - Search
 Craig Perkins
 Alex Tang
 
+The inverted index file we used is included in our repository.
+It is named test_index
+
 Test Case 1: no arg after search
 Input:
 ./search
@@ -10,16 +13,23 @@ Output:
 Error: Incorrect format, expecting:
 search <inverted-index file name>
 
-Test Case 2: searching nonexistent file
+Test Case 2: searching nonexistent index file
 Input:
 ./search nonexistent_file
 
 Output:
 Error: nonexistent_file does not exist.
 
+Test Case 3: searching existing index file
+Input:
+./search test_index
+
+Output: enter REPL
+$
+
 NOTE: $ ___ indicates a REPL (read-eval-print loop) command
 
-Test Case 3: entering incorrect command in REPL
+Test Case 4: entering incorrect command in REPL
 Input:
 $ incorrect_command
 
@@ -27,7 +37,7 @@ Output:
 Error: incorrect_command: invalid command.
 
 *** sa Test Cases ***
-Test Case 4: no term after sa
+Test Case 5: no term after sa
 Input:
 $ sa
 
@@ -35,13 +45,13 @@ Output:
 Error: Incorrect format, expecting:
 sa <term> ...
 
-Test Case 5: sa for nonexistent term
+Test Case 6: sa for nonexistent term
 Input: $ sa nonexistent_term
 
 Output:
 
 
-Test Case 6: sa for one term
+Test Case 7: sa for one term
 Input:
 $ sa term1
 
@@ -50,7 +60,7 @@ file1.txt
 file2.txt
 file3.txt
 
-Test Case 7: sa for two or more terms
+Test Case 8: sa for two or more terms
 Input:
 $ sa term1 term2
 
@@ -58,14 +68,14 @@ Output:
 file1.txt
 file2.txt
 
-Test Case 8: sa for two or more terms containing a nonexistent term
+Test Case 9: sa for two or more terms containing a nonexistent term
 Input:
 $ sa term1 nonexistent_term
 
 Output:
 
 *** so Test Cases ***
-Test Case 9: no term after so
+Test Case 10: no term after so
 Input:
 $ so
 
@@ -73,14 +83,14 @@ Output:
 Error: Incorrect format, expecting:
 so <term> ...
 
-Test Case 10: nonexistent term after so
+Test Case 11: nonexistent term after so
 Input:
 $ so nonexistent_term
 
 Output:
 
 
-Test Case 11: so for one term
+Test Case 12: so for one term
 Input:
 $ so term1
 
@@ -89,7 +99,7 @@ file1.txt
 file2.txt
 file3.txt
 
-Test Case 12: so for two or more terms
+Test Case 13: so for two or more terms
 Input:
 $ so term1 term2
 
@@ -99,7 +109,7 @@ file2.txt
 file3.txt
 file4.txt
 
-Test Case 13: so for two or more terms containing a nonexistent term
+Test Case 14: so for two or more terms containing a nonexistent term
 Input:
 $ so term1 nonexistent_term
 
