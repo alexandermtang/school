@@ -154,11 +154,6 @@ void parse_file(char *file)
   fclose(fp);
 }
 
-/*SortedList * SLCopy(SortedList * old_list, SortedList * new_list)*/
-/*{*/
-  /*return NULL;*/
-/*}*/
-
 void search_and(char *line)
 {
   TokenizerT *tokenizer = TKCreate(" \n", line);
@@ -169,6 +164,8 @@ void search_and(char *line)
   // check if first token is valid word name
   token = TKGetNextToken(tokenizer);
   if (token == NULL) {
+    printf("Error: Incorrect format, expecting:\n");
+    printf("sa <term> ...\n");
     free(token);
     TKDestroy(tokenizer);
     return;
@@ -210,7 +207,6 @@ void search_and(char *line)
   }
 
   print_list(list);
-  /*print_all_records();*/
 
   SLDestroy(list);
   free(token);
@@ -253,15 +249,18 @@ void search_or(char *line)
   free(token);  // get rid of "so" token
   struct Record *r;
   SortedList *list = SLCreate(compareStrings, destroyStrings);
+  bool has_args = false;
 
   while ((token = TKGetNextToken(tokenizer)) != NULL) {
+    has_args = true;
     r = find_record(token);
 
     if (r == NULL) {
-      printf("String %s not found.\n", token);
+      /*printf("String %s not found.\n", token);*/
       free(token);
       continue;
     }
+
 
     SortedListIterator *iter = SLCreateIterator(r->filenames);
     char *file;
@@ -275,8 +274,12 @@ void search_or(char *line)
     free(token);
   }
 
+  if (!has_args) {
+    printf("Error: Incorrect format, expecting:\n");
+    printf("so <term> ...\n");
+  }
+
   print_list(list);
-  /*print_all_records();*/
 
   SLDestroy(list);
   free(token);
@@ -330,8 +333,6 @@ int main(int argc, char **argv)
   }
 
   parse_file(filename);
-
-  print_all_records();
 
   char *linep = NULL;
   size_t linecap = 0;
