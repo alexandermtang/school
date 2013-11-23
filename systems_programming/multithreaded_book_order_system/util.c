@@ -19,3 +19,14 @@ bool file_exists(char *filename)
     struct stat info;
     return (stat(filename, &info) == 0);
 }
+
+void removeNewline(char* str) { // \r is a carriage return
+    int i = 0;
+    while (str[i] != '\0') {
+        if (str[i] == '\n' || str[i] == '\r') {
+            str[i] = '\0';
+            return;
+        }
+        i++;
+    }
+}

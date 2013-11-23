@@ -10,4 +10,6 @@ bool isnum(char *str);
 
 bool file_exists(char *filename);
 
+void removeNewline(char* str);
+
 #endif
