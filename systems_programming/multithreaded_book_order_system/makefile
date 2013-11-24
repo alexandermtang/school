@@ -5,7 +5,7 @@ build:
 	make bookorder.o tokenizer.o util.o queue.o bookorder
 
 bookorder: bookorder.o tokenizer.o util.o queue.o
-	$(CC) $(CFLAGS) bookorder.o tokenizer.o util.o queue.o -o bookorder
+	$(CC) $(CFLAGS) bookorder.o tokenizer.o util.o queue.o -o bookorder -l pthread
 
 bookorder.o: bookorder.c
 	$(CC) $(CFLAGS) -c bookorder.c
