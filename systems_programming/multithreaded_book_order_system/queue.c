@@ -2,11 +2,18 @@
 
 #include "queue.h"
 
+#define FALSE 0
+#define TRUE 1
+
 Queue *Q_create_queue() {
 	Queue *queue = malloc(sizeof(struct Queue));
+	queue->isopen = TRUE;
 	queue->head = NULL;
 	queue->tail = NULL;
 	queue->length = 0;
+	pthread_mutex_init(&queue->mutex,0);
+	pthread_cond_init(&queue->dataAvailable,0);
+	pthread_cond_init(&queue->spaceAvailable,0);
 	return queue;
 }
 
