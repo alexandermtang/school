@@ -38,17 +38,20 @@ struct CategoryQueue {
 struct Customer* customers = NULL;
 struct CategoryQueue* category_queues = NULL;
 
-void add_customer(struct Customer *s) {
+void add_customer(struct Customer *s) 
+{
     HASH_ADD_INT(customers,customer_id,s);
 }
 
-struct Customer* find_customer(int customer_id) {
+struct Customer* find_customer(int customer_id) 
+{
     struct Customer* s;
     HASH_FIND_INT(customers,&customer_id,s);
     return s;
 }
 
-Queue *find_category_queue(char *category) {
+Queue *find_category_queue(char *category) 
+{
     struct CategoryQueue* q;
     HASH_FIND_STR(category_queues,category,q);
     if (q == NULL) {
@@ -57,7 +60,8 @@ Queue *find_category_queue(char *category) {
     return q->queue;
 }
 
-void add_category_queue(char *category) {
+void add_category_queue(char *category) 
+{
     char *category_copy = malloc(strlen(category) + 1);
     strcpy(category_copy, category);
     struct CategoryQueue *c = malloc(sizeof(struct CategoryQueue));
@@ -68,19 +72,44 @@ void add_category_queue(char *category) {
     }
 }
 
+void* orderFunc(void* arg) 
+{   
+    char* order_file = (char*)arg;
 
+    FILE* fp = fopen(order_file, "r");
 
-void* orderFunc(void* arg) {
+    char line[LINE_MAX];
+    while (fgets(line,LINE_MAX,fp) != NULL) {
+        TokenizerT *tokenizer = TKCreate("|\n\r",line);
 
-    char* orderFile = (char*)arg;
+        struct BookOrder *order = malloc(sizeof(struct BookOrder));
+        order->title = TKGetNextToken(tokenizer);
+        order->price = atof(TKGetNextToken(tokenizer));
+        order->customer_id = atoi(TKGetNextToken(tokenizer));
+        order->category = TKGetNextToken(tokenizer);
+        printf("order category %s\n", order->category+1);
+
+        Queue *q = find_category_queue(order->category+1);
+        if (q==NULL) printf("Null\n");
+
+        pthread_mutex_lock(&lock);
+        // Q_enqueue(q, (void *)order);
+        // printf("%s thread got order %s\n", order->category, order->title);
+        pthread_mutex_unlock(&lock);
+
+        TKDestroy(tokenizer);
+    }
+
+    fclose(fp);
+
+    // listen for condition variable
 
     return NULL;
-
 }
 
-void* categoryFunc(void* arg) {
-
-    char* category = (char*)arg;
+void* categoryFunc(void* arg) 
+{
+    // char* category = (char*)arg;
 
     pthread_mutex_lock(&lock);
     // TODO implement this
@@ -194,7 +223,7 @@ int main(int argc, char *argv[]) {
 
     struct CategoryQueue* q;
     for (q = category_queues; q != NULL; q = q->hh.next) {
-        printf("My category is: %s\n",q->category);
+        printf("My category is: %s %d\n",q->category, q->queue->length);
     }
 
     TKDestroy(tokenizer);
