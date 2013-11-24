@@ -139,7 +139,7 @@ void* orderFunc(void* arg)
 void* categoryFunc(void* arg) 
 {
     char* category = (char*)arg;
-    printf("Spawn thread for %s\n",category);
+    // printf("Spawn thread for %s\n",category);
     Queue* q = find_category_queue(category);
     /*
     if (!q) {
@@ -321,10 +321,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    /*
     struct CategoryQueue* q;
     for (q = category_queues; q != NULL; q = q->hh.next) {
         // printf("My category is: %s %d\n",q->category, q->queue->length);
     }
+    */
 
     TKDestroy(tokenizer);
     free(tok);
@@ -346,4 +348,16 @@ int main(int argc, char *argv[]) {
     for (ptr = category_threads; ptr != NULL; ptr=ptr->next) {
         free(ptr);
     }
+
+    struct Customer *c, *tmp;
+    HASH_ITER(hh,customers,c,tmp) {
+        free(c);
+    }
+
+    struct CategoryQueue *q, *tmp2;
+    HASH_ITER(hh,category_queues,q,tmp2) {
+        free(q);
+    }
+
+    return 0;
 }
