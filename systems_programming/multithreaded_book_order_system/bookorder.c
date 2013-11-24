@@ -193,6 +193,8 @@ void* categoryFunc(void* arg)
         pthread_mutex_unlock(&q->mutex);
     }
 
+    pthread_mutex_destroy(&q->mutex);
+
     // fprintf(stdout,"Thread %s has exited.\n",category);
 
     return NULL;
@@ -364,6 +366,9 @@ int main(int argc, char *argv[]) {
         free(q->queue);
         free(q);
     }
+
+    pthread_mutex_destroy(&file_lock);
+    pthread_mutex_destroy(&database_lock);
 
     return 0;
 }
