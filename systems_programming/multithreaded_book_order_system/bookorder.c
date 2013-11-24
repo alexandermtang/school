@@ -40,6 +40,11 @@ struct CategoryQueue {
     UT_hash_handle hh;
 };
 
+struct CategoryThread {
+    pthread_t thread;
+    struct CategoryThread *next;
+};
+
 struct Customer* customers = NULL;
 struct CategoryQueue* category_queues = NULL;
 
@@ -126,7 +131,9 @@ void* orderFunc(void* arg)
     fclose(fp);
 
     // listen for condition variable
-    fprintf(stdout,"Thread %s has exited.\n","PRODUCER");
+    // fprintf(stdout,"Thread %s has exited.\n","PRODUCER");
+
+    return NULL;
 }
 
 void* categoryFunc(void* arg) 
@@ -186,7 +193,9 @@ void* categoryFunc(void* arg)
         pthread_mutex_unlock(&q->mutex);
     }
 
-    fprintf(stdout,"Thread %s has exited.\n",category);
+    // fprintf(stdout,"Thread %s has exited.\n",category);
+
+    return NULL;
 }
 
 pthread_t create_consumer_thread(char *category)
@@ -258,13 +267,12 @@ int main(int argc, char *argv[]) {
     TokenizerT* tokenizer = TKCreate(" ", categories);
     char* tok = TKGetNextToken(tokenizer);
 
-    pthread_t* category_threads = malloc(3*sizeof(pthread_t));
+    struct CategoryThread *category_threads = NULL;
 
     if (file_exists(tok)) {
         FILE* fp = fopen(tok,"r");
         char line[LINE_MAX];
 
-        int i = 0;
         while (fgets(line,LINE_MAX,fp) != NULL) {
             removeNewline(line);
             add_category_queue(line);
@@ -275,10 +283,16 @@ int main(int argc, char *argv[]) {
             // create category_threads
             pthread_t category_thread;
             pthread_create(&category_thread,NULL,categoryFunc,category);
-            // Might cause problems down the line.
-            // pthread_join(category_thread,NULL);
-            category_threads[i] = category_thread;
-            i++;
+
+            struct CategoryThread *cat_thread = malloc(sizeof(struct CategoryThread));
+            cat_thread->thread = category_thread;
+            if (category_threads == NULL) {
+                category_threads = cat_thread;
+                cat_thread->next = NULL;
+            } else {
+                cat_thread->next = category_threads;
+                category_threads = cat_thread;
+            }
         }
 
         fclose(fp);
@@ -286,16 +300,23 @@ int main(int argc, char *argv[]) {
         add_category_queue(tok);
         free(tok);
 
-        int i = 0;
         while ((tok = TKGetNextToken(tokenizer)) != NULL) {
             add_category_queue(tok);
 
             // create category_thread
             pthread_t category_thread;
             pthread_create(&category_thread,NULL,categoryFunc,tok);
-            // pthread_join(category_thread,NULL);
-            category_threads[i] = category_thread;
-            i++;
+
+            struct CategoryThread *cat_thread = malloc(sizeof(struct CategoryThread));
+            cat_thread->thread = category_thread;
+            if (category_threads == NULL) {
+                category_threads = cat_thread;
+                cat_thread->next = NULL;
+            } else {
+                cat_thread->next = category_threads;
+                category_threads = cat_thread;
+            }
+
             free(tok);
         }
     }
@@ -315,10 +336,14 @@ int main(int argc, char *argv[]) {
     pthread_t producer_thread;
     pthread_create(&producer_thread,NULL,orderFunc,bookorderfile);
 
-    int i = 0;
-    while (category_threads[i] != NULL) {
-        pthread_join(category_threads[i],NULL);
+    struct CategoryThread *ptr = NULL; 
+    for (ptr = category_threads; ptr != NULL; ptr=ptr->next) {
+        pthread_join(ptr->thread,NULL);
     }
     pthread_join(producer_thread,NULL);
 
+    // Might lead to problems.
+    for (ptr = category_threads; ptr != NULL; ptr=ptr->next) {
+        free(ptr);
+    }
 }
