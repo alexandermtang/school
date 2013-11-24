@@ -351,11 +351,17 @@ int main(int argc, char *argv[]) {
 
     struct Customer *c, *tmp;
     HASH_ITER(hh,customers,c,tmp) {
+        free(c->name);
+        free(c->address);
+        free(c->zipcode);
+        free(c->state);
         free(c);
     }
 
     struct CategoryQueue *q, *tmp2;
     HASH_ITER(hh,category_queues,q,tmp2) {
+        free(q->category);
+        free(q->queue);
         free(q);
     }
 
