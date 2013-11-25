@@ -18,6 +18,7 @@ Queue *Q_create_queue() {
 }
 
 void Q_enqueue(Queue *queue, void *data) {
+	pthread_mutex_lock(&queue->mutex);
 	QueueNode *node = malloc(sizeof(struct QueueNode));
 	node->data = data;
 	node->next = NULL;
@@ -26,18 +27,21 @@ void Q_enqueue(Queue *queue, void *data) {
 		queue->head = node;
 		queue->tail = node;
 		queue->length++;
+		pthread_mutex_unlock(&queue->mutex);
 		return;
 	}
 
 	queue->tail->next = node;
 	queue->tail = node;
 	queue->length++;
+	pthread_mutex_unlock(&queue->mutex);
 }
 
 void *Q_dequeue(Queue *queue) {
   pthread_mutex_lock(&queue->mutex);
 
   if (queue->length == 0) {
+  	pthread_mutex_unlock(&queue->mutex);
     return NULL;
   }
 
@@ -46,7 +50,7 @@ void *Q_dequeue(Queue *queue) {
 		void *data = head->data;
 		free(head);
 		queue->length = 0;
-    pthread_mutex_unlock(&queue->mutex);
+    	pthread_mutex_unlock(&queue->mutex);
 		return data;
 	}
 
@@ -56,7 +60,7 @@ void *Q_dequeue(Queue *queue) {
 	free(head);				// may need to do free(head->next) before this
 	queue->length--;
 
-  pthread_mutex_unlock(&queue->mutex);
+  	pthread_mutex_unlock(&queue->mutex);
 	return data;
 }
 

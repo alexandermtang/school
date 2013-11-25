@@ -111,7 +111,6 @@ void* orderFunc(void* arg)
         order->price = atof(TKGetNextToken(tokenizer));
         order->customer_id = atoi(TKGetNextToken(tokenizer));
         order->category = TKGetNextToken(tokenizer);
-        // printf("order category %s\n", order->category);
 
         Queue *q = find_category_queue(order->category);
 
@@ -121,13 +120,6 @@ void* orderFunc(void* arg)
         }
 
         Q_enqueue(q, (void *)order);
-        /*
-        while (q->length > 0) {
-            pthread_cond_signal(&q->dataAvailable); // Shout at consumer
-            pthread_cond_wait(&q->spaceAvailable, &q->mutex);
-        }
-        */
-        //printf("%s thread got order %s\n", order->category, order->title);
 
         TKDestroy(tokenizer);
     }
@@ -135,15 +127,10 @@ void* orderFunc(void* arg)
     // Notify threads about end of stream
     struct CategoryQueue *q;
     for (q = category_queues; q != NULL; q = q->hh.next) {
-        pthread_mutex_lock(&q->queue->mutex);
         q->queue->isopen = FALSE;
-        pthread_mutex_unlock(&q->queue->mutex);
     }
 
     fclose(fp);
-
-    // listen for condition variable
-    // fprintf(stdout,"Thread %s has exited.\n","PRODUCER");
 
     return NULL;
 }
