@@ -121,10 +121,6 @@ void* orderFunc(void* arg)
 
         Q_enqueue(q, (void *)order);
 
-        char* tok;
-        while ((tok = TKGetNextToken(tokenizer))) {
-            free(tok);
-        }
         TKDestroy(tokenizer);
     }
 
@@ -143,6 +139,7 @@ void* categoryFunc(void* arg)
 {
     char* category = (char*)arg;
     Queue* q = find_category_queue(category);
+    free(category);
 
     while (q->isopen || q->length > 0) {
         // printf("My isopen is: %d\n",q->isopen);
@@ -203,7 +200,6 @@ void* categoryFunc(void* arg)
     }
 
     // fprintf(stdout,"Thread %s has exited.\n",category);
-
     return NULL;
 }
 
@@ -229,10 +225,6 @@ void create_customers(char* databasefile)
 
         add_customer(customer);
 
-        char* tok;
-        while ((tok = TKGetNextToken(tokenizer))) {
-            free(tok);
-        }
         TKDestroy(tokenizer);
     }
 
@@ -293,6 +285,7 @@ int main(int argc, char *argv[])
                 cat_thread->next = category_threads;
                 category_threads = cat_thread;
             }
+
         }
 
         fclose(fp);

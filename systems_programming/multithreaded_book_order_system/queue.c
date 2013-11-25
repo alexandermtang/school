@@ -57,7 +57,7 @@ void *Q_dequeue(Queue *queue) {
 	QueueNode *head = queue->head;
 	void *data = head->data;
 	queue->head = queue->head->next;
-	free(head);				// may need to do free(head->next) before this
+	free(head);
 	queue->length--;
 
   	pthread_mutex_unlock(&queue->mutex);
