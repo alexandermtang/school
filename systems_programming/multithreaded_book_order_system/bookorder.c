@@ -48,19 +48,19 @@ struct CategoryThread {
 struct Customer* customers = NULL;
 struct CategoryQueue* category_queues = NULL;
 
-void add_customer(struct Customer *s) 
+void add_customer(struct Customer *s)
 {
     HASH_ADD_INT(customers,customer_id,s);
 }
 
-struct Customer* find_customer(int customer_id) 
+struct Customer* find_customer(int customer_id)
 {
     struct Customer* s;
     HASH_FIND_INT(customers,&customer_id,s);
     return s;
 }
 
-Queue *find_category_queue(char *category) 
+Queue *find_category_queue(char *category)
 {
     struct CategoryQueue* q;
     HASH_FIND_STR(category_queues,category,q);
@@ -70,7 +70,7 @@ Queue *find_category_queue(char *category)
     return q->queue;
 }
 
-void add_category_queue(char *category) 
+void add_category_queue(char *category)
 {
     char *category_copy = malloc(strlen(category) + 1);
     strcpy(category_copy, category);
@@ -78,12 +78,12 @@ void add_category_queue(char *category)
     c->category = category_copy;
     c->queue = Q_create_queue();
     if (find_category_queue(category) == NULL) {
-        HASH_ADD_KEYPTR( hh, category_queues, c->category, strlen(c->category), c );   
+        HASH_ADD_KEYPTR( hh, category_queues, c->category, strlen(c->category), c );
     }
 }
 
-void* orderFunc(void* arg) 
-{   
+void* orderFunc(void* arg)
+{
     char* order_file = (char*)arg;
 
     FILE* fp = fopen(order_file, "r");
@@ -97,16 +97,15 @@ void* orderFunc(void* arg)
         order->price = atof(TKGetNextToken(tokenizer));
         order->customer_id = atoi(TKGetNextToken(tokenizer));
         order->category = TKGetNextToken(tokenizer);
-        // printf("order category %s\n", order->category+1); // Note: +1 because text isn't formatted properly
+        // printf("order category %s\n", order->category);
 
-        Queue *q = find_category_queue(order->category+1);
+        Queue *q = find_category_queue(order->category);
 
         if (!q) {
-            printf("Category %s does not exist.",order->category+1);
+            printf("Category %s does not exist.",order->category);
             return NULL;
         }
 
-        pthread_mutex_lock(&q->mutex);
         Q_enqueue(q, (void *)order);
         /*
         while (q->length > 0) {
@@ -115,7 +114,6 @@ void* orderFunc(void* arg)
         }
         */
         //printf("%s thread got order %s\n", order->category, order->title);
-        pthread_mutex_unlock(&q->mutex);
 
         TKDestroy(tokenizer);
     }
@@ -136,29 +134,17 @@ void* orderFunc(void* arg)
     return NULL;
 }
 
-void* categoryFunc(void* arg) 
+void* categoryFunc(void* arg)
 {
     char* category = (char*)arg;
-    // printf("Spawn thread for %s\n",category);
     Queue* q = find_category_queue(category);
-    /*
-    if (!q) {
-        //printf("Shouldn't ever happen.");
-        return NULL;
-    }
-    */
 
     while (q->isopen || q->length > 0) {
-        pthread_mutex_lock(&q->mutex);
-
         // printf("My isopen is: %d\n",q->isopen);
         // printf("My queue length is: %d\n",q->length);
 
         if (q->length == 0) {
-            pthread_mutex_unlock(&q->mutex);
             continue;
-            //pthread_cond_signal(&q->spaceAvailable);
-            //pthread_cond_wait(&q->dataAvailable, &q->mutex);
         }
 
         pthread_mutex_lock(&database_lock);
@@ -171,10 +157,11 @@ void* categoryFunc(void* arg)
         fprintf(stdout,"### Order Summary ###\n");
         fprintf(stdout,"Customer name: %s\n",cust->name);
         fprintf(stdout,"Customer id: %d\n",cust->customer_id);
+
         if (cust->balance > 0) {
             fprintf(stdout,"Balance after purchase: %.2f\n\n",cust->balance);
         } else {
-            fprintf(stdout,"Order rejeceted, remaining balance: %.2f\n\n",cust->balance+order->price);
+            fprintf(stdout,"Order rejected, remaining balance: %.2f\n\n",cust->balance+order->price);
         }
 
         if (cust->balance < 0) {
@@ -193,8 +180,6 @@ void* categoryFunc(void* arg)
         free(order);
         pthread_mutex_unlock(&file_lock);
         pthread_mutex_unlock(&database_lock);
-
-        pthread_mutex_unlock(&q->mutex);
     }
 
     pthread_mutex_destroy(&q->mutex);
@@ -231,8 +216,8 @@ void create_customers(char* databasefile)
 }
 
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char *argv[])
+{
     if (argc < 4) {
         fprintf(stderr, "Error: incorrect input format.\n");
         fprintf(stderr, "Correct format: ./bookorder <database file> <book order file> <categories>\n");
@@ -254,13 +239,6 @@ int main(int argc, char *argv[]) {
 
     create_customers(databasefile);
 
-    /*
-    struct Customer* cust;
-    for (cust = customers; cust != NULL; cust=cust->hh.next) {
-        printf("customer name: %f\n",cust->balance);
-    }
-    */
-
     char* categories = argv[3];
     TokenizerT* tokenizer = TKCreate(" ", categories);
     char* tok = TKGetNextToken(tokenizer);
@@ -276,11 +254,11 @@ int main(int argc, char *argv[]) {
             add_category_queue(line);
             // Gonna cause memory leak, need to fix.
             char* category = malloc(strlen(line)+1);
-            strcpy(category,line);
+            strcpy(category, line);
 
             // create category_threads
             pthread_t category_thread;
-            pthread_create(&category_thread,NULL,categoryFunc,category);
+            pthread_create(&category_thread, NULL, categoryFunc, category);
 
             struct CategoryThread *cat_thread = malloc(sizeof(struct CategoryThread));
             cat_thread->thread = category_thread;
@@ -319,12 +297,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    /*
-    struct CategoryQueue* q;
-    for (q = category_queues; q != NULL; q = q->hh.next) {
-        // printf("My category is: %s %d\n",q->category, q->queue->length);
-    }
-    */
 
     TKDestroy(tokenizer);
     free(tok);
@@ -336,7 +308,8 @@ int main(int argc, char *argv[]) {
     pthread_t producer_thread;
     pthread_create(&producer_thread,NULL,orderFunc,bookorderfile);
 
-    struct CategoryThread *ptr = NULL; 
+    // Join category threads
+    struct CategoryThread *ptr = NULL;
     for (ptr = category_threads; ptr != NULL; ptr=ptr->next) {
         pthread_join(ptr->thread,NULL);
     }

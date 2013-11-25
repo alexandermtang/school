@@ -5,6 +5,8 @@
 #define FALSE 0
 #define TRUE 1
 
+// Note: Queue is thread-safe
+
 Queue *Q_create_queue() {
 	Queue *queue = malloc(sizeof(struct Queue));
 	queue->isopen = TRUE;
@@ -33,11 +35,14 @@ void Q_enqueue(Queue *queue, void *data) {
 }
 
 void *Q_dequeue(Queue *queue) {
+  pthread_mutex_lock(&queue->mutex);
+
 	if (queue->length == 1) {
 		QueueNode *head = queue->head;
 		void *data = head->data;
 		free(head);
 		queue->length = 0;
+    pthread_mutex_unlock(&queue->mutex);
 		return data;
 	}
 
@@ -47,6 +52,7 @@ void *Q_dequeue(Queue *queue) {
 	free(head);				// may need to do free(head->next) before this
 	queue->length--;
 
+  pthread_mutex_unlock(&queue->mutex);
 	return data;
 }
 
