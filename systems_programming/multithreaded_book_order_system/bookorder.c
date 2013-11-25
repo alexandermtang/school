@@ -359,12 +359,16 @@ int main(int argc, char *argv[])
       struct SuccessfulOrder *s;
       while ((s = Q_dequeue(c->successful_orders))) {
         fprintf(stdout, "%s|%.2f|%.2f\n", s->title, s->price, s->balance);
+        free(s->title);
+        free(s);
       }
 
       fprintf(stdout, "### REJECTED ORDERS ###\n");
       struct RejectedOrder*r;
       while ((r = Q_dequeue(c->rejected_orders))) {
         fprintf(stdout, "%s|%.2f\n", r->title, r->price);
+        free(r->title);
+        free(r);
       }
       fprintf(stdout, "=== END CUSTOMER INFO ===\n\n");
     }
