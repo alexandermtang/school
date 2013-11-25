@@ -37,6 +37,10 @@ void Q_enqueue(Queue *queue, void *data) {
 void *Q_dequeue(Queue *queue) {
   pthread_mutex_lock(&queue->mutex);
 
+  if (queue->length == 0) {
+    return NULL;
+  }
+
 	if (queue->length == 1) {
 		QueueNode *head = queue->head;
 		void *data = head->data;

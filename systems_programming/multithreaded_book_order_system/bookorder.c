@@ -31,7 +31,21 @@ struct Customer {
     char* state;
     char* zipcode;
     float balance;
+
+    Queue *successful_orders; // queue of struct SuccessfulOrder
+    Queue *rejected_orders; // queue of struct RejectedOrder
     UT_hash_handle hh;
+};
+
+struct SuccessfulOrder {
+    char* title;
+    float price;
+    float balance;
+};
+
+struct RejectedOrder {
+    char* title;
+    float price;
 };
 
 struct CategoryQueue {
@@ -169,10 +183,25 @@ void* categoryFunc(void* arg)
             fprintf(stdout, "Title of book: %s\n",order->title);
             fprintf(stdout,"Cost of book: %.2f\n\n",order->price);
             cust->balance = cust->balance+order->price;
+
+            struct RejectedOrder *r = malloc(sizeof(struct RejectedOrder));
+            r->title = malloc(strlen(order->title) + 1);
+            strcpy(r->title, order->title);
+            r->price = order->price;
+
+            Q_enqueue(cust->rejected_orders, r);
         } else {
             fprintf(stdout,"### Accepted Orders ###\n");
             fprintf(stdout,"Title of book: %s\n",order->title);
             fprintf(stdout,"Cost of book: %.2f\n\n",order->price);
+
+            struct SuccessfulOrder *s = malloc(sizeof(struct SuccessfulOrder));
+            s->title = malloc(strlen(order->title) + 1);
+            strcpy(s->title, order->title);
+            s->price = order->price;
+            s->balance = cust->balance;
+
+            Q_enqueue(cust->successful_orders, s);
         }
 
         free(order->title);
@@ -206,6 +235,8 @@ void create_customers(char* databasefile)
         customer->address = TKGetNextToken(tokenizer);
         customer->state = TKGetNextToken(tokenizer);
         customer->zipcode = TKGetNextToken(tokenizer);
+        customer->successful_orders = Q_create_queue();
+        customer->rejected_orders = Q_create_queue();
 
         add_customer(customer);
 
@@ -315,6 +346,29 @@ int main(int argc, char *argv[])
     }
     pthread_join(producer_thread,NULL);
 
+    // Write customer history to file.
+    struct Customer *c, *tmp;
+    /*FILE *fp = fopen()*/
+    HASH_ITER(hh,customers,c,tmp) {
+      fprintf(stdout, "=== BEGIN CUSTOMER INFO ===\n");
+      fprintf(stdout, "### BALANCE ###\n");
+      fprintf(stdout, "Customer name: %s\n", c->name);
+      fprintf(stdout, "Customer ID number: %d\n", c->customer_id);
+      fprintf(stdout, "Remaining credit balance after all purchases (a dollar amount): %.2f\n", c->balance);
+      fprintf(stdout, "### SUCCESSFUL ORDERS ###\n");
+      struct SuccessfulOrder *s;
+      while ((s = Q_dequeue(c->successful_orders))) {
+        fprintf(stdout, "%s|%.2f|%.2f\n", s->title, s->price, s->balance);
+      }
+
+      fprintf(stdout, "### REJECTED ORDERS ###\n");
+      struct RejectedOrder*r;
+      while ((r = Q_dequeue(c->rejected_orders))) {
+        fprintf(stdout, "%s|%.2f\n", r->title, r->price);
+      }
+      fprintf(stdout, "=== END CUSTOMER INFO ===\n\n");
+    }
+
     // Might lead to problems.
     ptr = category_threads;
     while (ptr != NULL) {
@@ -324,7 +378,6 @@ int main(int argc, char *argv[])
     }
     category_threads = NULL;
 
-    struct Customer *c, *tmp;
     HASH_ITER(hh,customers,c,tmp) {
         HASH_DEL(customers,c);
         free(c->name);
