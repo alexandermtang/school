@@ -108,8 +108,12 @@ void* orderFunc(void* arg)
 
         struct BookOrder *order = malloc(sizeof(struct BookOrder));
         order->title = TKGetNextToken(tokenizer);
-        order->price = atof(TKGetNextToken(tokenizer));
-        order->customer_id = atoi(TKGetNextToken(tokenizer));
+        char* temp = TKGetNextToken(tokenizer);
+        order->price = atof(temp);
+        free(temp);
+        temp = TKGetNextToken(tokenizer);
+        order->customer_id = atoi(temp);
+        free(temp);
         order->category = TKGetNextToken(tokenizer);
 
         Queue *q = find_category_queue(order->category);
@@ -215,8 +219,12 @@ void create_customers(char* databasefile)
         struct Customer *customer = malloc(sizeof(struct Customer));
 
         customer->name = TKGetNextToken(tokenizer);
-        customer->customer_id = atoi(TKGetNextToken(tokenizer));
-        customer->balance = atof(TKGetNextToken(tokenizer));
+        char* temp = TKGetNextToken(tokenizer);
+        customer->customer_id = atoi(temp);
+        free(temp);
+        temp = TKGetNextToken(tokenizer);
+        customer->balance = atof(temp);
+        free(temp);
         customer->address = TKGetNextToken(tokenizer);
         customer->state = TKGetNextToken(tokenizer);
         customer->zipcode = TKGetNextToken(tokenizer);
