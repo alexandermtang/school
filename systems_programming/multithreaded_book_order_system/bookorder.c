@@ -187,6 +187,10 @@ void* categoryFunc(void* arg)
             fprintf(stdout,"Title of book: %s\n",order->title);
             fprintf(stdout,"Cost of book: %.2f\n\n",order->price);
         }
+
+        free(order->title);
+        free(order->category);
+        free(order);
         pthread_mutex_unlock(&file_lock);
         pthread_mutex_unlock(&database_lock);
 
