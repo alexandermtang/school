@@ -211,8 +211,6 @@ void* categoryFunc(void* arg)
         pthread_mutex_unlock(&database_lock);
     }
 
-    pthread_mutex_destroy(&q->mutex);
-
     // fprintf(stdout,"Thread %s has exited.\n",category);
 
     return NULL;
@@ -384,6 +382,10 @@ int main(int argc, char *argv[])
 
     HASH_ITER(hh,customers,c,tmp) {
         HASH_DEL(customers,c);
+        Q_destroy(c->successful_orders);
+        Q_destroy(c->rejected_orders);
+        free(c->successful_orders);
+        free(c->rejected_orders);
         free(c->name);
         free(c->address);
         free(c->zipcode);

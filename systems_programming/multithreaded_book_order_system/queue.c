@@ -68,4 +68,5 @@ void Q_destroy(Queue *queue) {
 	while (queue->length > 0) {
 		Q_dequeue(queue);
 	}
+	pthread_mutex_destroy(&queue->mutex);
 }
