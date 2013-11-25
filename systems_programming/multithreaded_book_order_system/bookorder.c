@@ -357,6 +357,7 @@ int main(int argc, char *argv[]) {
 
     struct Customer *c, *tmp;
     HASH_ITER(hh,customers,c,tmp) {
+        HASH_DEL(customers,c);
         free(c->name);
         free(c->address);
         free(c->zipcode);
@@ -366,6 +367,7 @@ int main(int argc, char *argv[]) {
 
     struct CategoryQueue *q, *tmp2;
     HASH_ITER(hh,category_queues,q,tmp2) {
+        HASH_DEL(category_queues,q);
         free(q->category);
         free(q->queue);
         free(q);
