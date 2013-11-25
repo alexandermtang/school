@@ -204,14 +204,6 @@ void* categoryFunc(void* arg)
     return NULL;
 }
 
-pthread_t create_consumer_thread(char *category)
-{
-    pthread_t consumer;
-    pthread_create(&consumer, NULL, categoryFunc, category);
-
-    return consumer;
-}
-
 void create_customers(char* databasefile)
 {
     FILE* fp = fopen(databasefile,"r");
@@ -351,9 +343,13 @@ int main(int argc, char *argv[]) {
     pthread_join(producer_thread,NULL);
 
     // Might lead to problems.
-    for (ptr = category_threads; ptr != NULL; ptr=ptr->next) {
-        free(ptr);
+    ptr = category_threads;
+    while (ptr != NULL) {
+        struct CategoryThread *temp = ptr;
+        ptr = ptr->next;
+        free(temp);
     }
+    category_threads = NULL;
 
     struct Customer *c, *tmp;
     HASH_ITER(hh,customers,c,tmp) {
@@ -368,6 +364,7 @@ int main(int argc, char *argv[]) {
     struct CategoryQueue *q, *tmp2;
     HASH_ITER(hh,category_queues,q,tmp2) {
         HASH_DEL(category_queues,q);
+        Q_destroy(q->queue);
         free(q->category);
         free(q->queue);
         free(q);
