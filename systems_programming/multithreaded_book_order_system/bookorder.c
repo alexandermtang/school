@@ -121,6 +121,10 @@ void* orderFunc(void* arg)
 
         Q_enqueue(q, (void *)order);
 
+        char* tok;
+        while ((tok = TKGetNextToken(tokenizer))) {
+            free(tok);
+        }
         TKDestroy(tokenizer);
     }
 
@@ -225,6 +229,10 @@ void create_customers(char* databasefile)
 
         add_customer(customer);
 
+        char* tok;
+        while ((tok = TKGetNextToken(tokenizer))) {
+            free(tok);
+        }
         TKDestroy(tokenizer);
     }
 
