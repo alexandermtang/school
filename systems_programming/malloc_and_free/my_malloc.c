@@ -1,5 +1,5 @@
 #include "my_malloc.h"
-
+#include <stdio.h>
 
 static char big_block[BLOCKSIZE];
 
@@ -67,6 +67,13 @@ void* my_malloc(unsigned int size)
 // free a memory buffer pointed to by p
 void my_free(void *p)
 {
+
+	if (p < (void*)big_block || p > ((void*)big_block + BLOCKSIZE)) {
+		fprintf(stderr,"Cannot free pointer that was not allocated "
+					   "in file %s at line %d.\n",__FILE__,__LINE__);
+		return;
+	}
+
 	struct MemEntry *ptr;
 	struct MemEntry *prev;
 	struct MemEntry *succ;

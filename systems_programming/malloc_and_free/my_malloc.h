@@ -1,7 +1,7 @@
 #ifndef MY_MALLOC_H
-#define TOKENIZER_H
+#define MY_MALLOC_H
 
-#define BLOCKSIZE 4000
+#define BLOCKSIZE 5000
 
 void *my_malloc( unsigned int size );
 
