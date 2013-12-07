@@ -1,6 +1,7 @@
 #include "my_malloc.h"
 #include <stdio.h>
 
+// use two different blocks: one for little chunks, one for big chunks
 static char big_block[BLOCKSIZE];
 static char little_block[BLOCKSIZE];
 
@@ -21,12 +22,12 @@ void* my_malloc(unsigned int size)
 
 	if(!initialized)	// 1st time called
 	{
-		// printf("sizeof MemEntry: %zu\n",sizeof(struct MemEntry));
 		// create a big_root chunk at the beginning of the memory block
 		big_root = (struct MemEntry*)big_block;
 		big_root->prev = big_root->succ = 0;
 		big_root->size = BLOCKSIZE - sizeof(struct MemEntry);
 		big_root->isfree = 1;
+		// create a little_root chunk at the beginning of the memory block
 		little_root = (struct MemEntry*)little_block;
 		little_root->prev = little_root->succ = 0;
 		little_root->size = BLOCKSIZE - sizeof(struct MemEntry);
@@ -65,12 +66,10 @@ void* my_malloc(unsigned int size)
 			succ = (struct MemEntry*)((char*)p + sizeof(struct MemEntry) + size);
 			succ->prev = p;
 			succ->succ = p->succ;
-			//begin add
 			if(p->succ != 0)
 				p->succ->prev = succ;
 			p->succ = succ;
 			succ->isfree = 1;
-			//end add
 
 			succ->size = p->size - sizeof(struct MemEntry) - size;
 			p->size = size;
@@ -86,12 +85,12 @@ void* my_malloc(unsigned int size)
 // free a memory buffer pointed to by p
 void my_free(void *p)
 {
-
 	// Note: Maybe there's a better solution
+  // return if p falls outside range of big_block and little_block
 	if ((p < (void*)big_block || p > ((void*)big_block + BLOCKSIZE))
 		&& (p < (void*)little_block || p > ((void*)little_block + BLOCKSIZE))) {
 		fprintf(stderr,"Error: Cannot free pointer that was not allocated "
-					   "in file %s at line %d.\n",__FILE__,__LINE__);
+					         "in file %s at line %d.\n",__FILE__,__LINE__);
 		return;
 	}
 
@@ -99,11 +98,11 @@ void my_free(void *p)
 	struct MemEntry *prev;
 	struct MemEntry *succ;
 
+  // check if p is a ptr to a valid chunk in big_block
 	int isMemEntry = 0;
 	ptr = (struct MemEntry*)big_block;
 	while (ptr != 0) {
-		// printf("ptr at memory address: %p\nTrying to free: %p\n\n",ptr,p);
-		if (p == (void*)ptr+sizeof(struct MemEntry)) {
+		if (p == (void*)ptr + sizeof(struct MemEntry)) {
 			isMemEntry = 1;
 			break;
 		}
@@ -111,10 +110,10 @@ void my_free(void *p)
 		ptr = ptr->succ;
 	}
 
+  // check if p is a ptr to a valid chunk in little_block
 	ptr = (struct MemEntry*)little_block;
-	while (ptr != 0) {
-		// printf("ptr at memory address: %p\nTrying to free: %p\n\n",ptr,p);
-		if (p == (void*)ptr+sizeof(struct MemEntry)) {
+	while (ptr != 0 && isMemEntry == 0) {
+		if (p == (void*)ptr + sizeof(struct MemEntry)) {
 			isMemEntry = 1;
 			break;
 		}
@@ -130,6 +129,7 @@ void my_free(void *p)
 
 	ptr = (struct MemEntry*)((char*)p - sizeof(struct MemEntry));
 
+  // do not double free
 	if (ptr->isfree) {
 		fprintf(stderr,"Error: Cannot free pointer that was already freed "
 					   "in file %s at line %d.\n",__FILE__,__LINE__);
@@ -141,12 +141,10 @@ void my_free(void *p)
 		// the previous chunk is free, so
 		// merge this chunk with the previous chunk
 		prev->size += sizeof(struct MemEntry) + ptr->size;
-		//begin add
 		ptr->isfree=1;
 		prev->succ = ptr->succ;
 		if(ptr->succ != 0)
 			ptr->succ->prev = prev;
-		//end add
 	}
 	else
 	{
@@ -160,10 +158,8 @@ void my_free(void *p)
 		// the next chunk is free, merge with it
 		prev->size += sizeof(struct MemEntry) + succ->size;
 		prev->isfree = 1;
-		//begin add
 		prev->succ = succ->succ;
 		if(succ->succ != 0)
 			succ->succ->prev=prev;
-		//end add
 	}
 }
