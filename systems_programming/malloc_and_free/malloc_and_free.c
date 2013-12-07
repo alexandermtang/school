@@ -8,5 +8,12 @@
 int main(int argc, char* argv[])
 {
 
-  exit(0);
+	// Test unallocated variable
+	int x = 5;
+	free(&x);
+
+	char *name = malloc(50);
+	free(name+10);
+
+  	exit(0);
 }

@@ -3,6 +3,12 @@
 
 static char big_block[BLOCKSIZE];
 
+struct MemEntry {
+	unsigned int size;
+	struct MemEntry *prev, *succ;
+	unsigned char isfree;
+};
+
 // return a pointer to the memory buffer requested
 void* my_malloc(unsigned int size)
 {
@@ -68,6 +74,7 @@ void* my_malloc(unsigned int size)
 void my_free(void *p)
 {
 
+	// Note: Maybe there's a better solution
 	if (p < (void*)big_block || p > ((void*)big_block + BLOCKSIZE)) {
 		fprintf(stderr,"Cannot free pointer that was not allocated "
 					   "in file %s at line %d.\n",__FILE__,__LINE__);
@@ -78,7 +85,32 @@ void my_free(void *p)
 	struct MemEntry *prev;
 	struct MemEntry *succ;
 	
+	int isMemEntry = 0;
+	ptr = (struct MemEntry*)big_block;
+	while (ptr != 0) {
+		// printf("ptr at memory address: %p\nTrying to free: %p\n\n",ptr,p);
+		if (p == (void*)ptr+sizeof(struct MemEntry)) {
+			isMemEntry = 1;
+			break;
+		}
+
+		ptr = ptr->succ;
+	}
+
+	if (!isMemEntry) {
+		fprintf(stderr,"Cannot free pointer that was not returned by malloc "
+					   "in file %s at line %d.\n",__FILE__,__LINE__);
+		return;
+	}
+
 	ptr = (struct MemEntry*)((char*)p - sizeof(struct MemEntry));
+
+	if (ptr->isfree) {
+		fprintf(stderr,"Cannot free pointer that was already freed "
+					   "in file %s at line %d.\n",__FILE__,__LINE__);
+		return;
+	}
+
 	if((prev = ptr->prev) != 0 && prev->isfree)
 	{
 		// the previous chunk is free, so

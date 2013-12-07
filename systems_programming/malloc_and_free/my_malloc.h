@@ -7,10 +7,4 @@ void *my_malloc( unsigned int size );
 
 void my_free( void * p );
 
-struct MemEntry {
-	unsigned int size;
-	struct MemEntry *prev, *succ;
-	unsigned char isfree;
-};
-
 #endif
