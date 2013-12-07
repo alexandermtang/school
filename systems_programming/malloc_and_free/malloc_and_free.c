@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
 
 	// Test free twice
 	char *name = malloc(50);
+	free(name+10);
 	free(name);
 	free(name);
 

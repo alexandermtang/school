@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 static char big_block[BLOCKSIZE];
+static char little_block[BLOCKSIZE];
 
 struct MemEntry {
 	unsigned int size;
@@ -13,21 +14,26 @@ struct MemEntry {
 void* my_malloc(unsigned int size)
 {
 	static int 		initialized = 0;
-	static struct MemEntry *root;
+	static struct MemEntry *big_root;
+	static struct MemEntry *little_root;
 	struct MemEntry *p;
 	struct MemEntry *succ;
-	
+
 	if(!initialized)	// 1st time called
 	{
 		// printf("sizeof MemEntry: %zu\n",sizeof(struct MemEntry));
-		// create a root chunk at the beginning of the memory block
-		root = (struct MemEntry*)big_block;
-		root->prev = root->succ = 0;
-		root->size = BLOCKSIZE - sizeof(struct MemEntry);
-		root->isfree = 1;
+		// create a big_root chunk at the beginning of the memory block
+		big_root = (struct MemEntry*)big_block;
+		big_root->prev = big_root->succ = 0;
+		big_root->size = BLOCKSIZE - sizeof(struct MemEntry);
+		big_root->isfree = 1;
+		little_root = (struct MemEntry*)little_block;
+		little_root->prev = little_root->succ = 0;
+		little_root->size = BLOCKSIZE - sizeof(struct MemEntry);
+		little_root->isfree = 1;
 		initialized = 1;
 	}
-	p = root;
+	p = size < CHUNKTHRESHOLD ? little_root : big_root;
 	do
 	{
 		if(p->size < size)
@@ -47,7 +53,7 @@ void* my_malloc(unsigned int size)
 		}
 		else if(p->size < (size + sizeof(struct MemEntry)))
 		{
-			// this chunk is free and large enough to hold data, 
+			// this chunk is free and large enough to hold data,
 			// but there's not enough memory to hold the HEADER of the next chunk
 			// don't create any more chunks after this one
 			p->isfree = 0;
@@ -65,14 +71,14 @@ void* my_malloc(unsigned int size)
 			p->succ = succ;
 			succ->isfree = 1;
 			//end add
-			
+
 			succ->size = p->size - sizeof(struct MemEntry) - size;
 			p->size = size;
 			p->isfree = 0;
 			return (char*)p + sizeof(struct MemEntry);
 		}
 	} while(p != 0);
-	
+
 	return 0;
 }
 
@@ -82,7 +88,8 @@ void my_free(void *p)
 {
 
 	// Note: Maybe there's a better solution
-	if (p < (void*)big_block || p > ((void*)big_block + BLOCKSIZE)) {
+	if ((p < (void*)big_block || p > ((void*)big_block + BLOCKSIZE))
+		&& (p < (void*)little_block || p > ((void*)little_block + BLOCKSIZE))) {
 		fprintf(stderr,"Error: Cannot free pointer that was not allocated "
 					   "in file %s at line %d.\n",__FILE__,__LINE__);
 		return;
@@ -91,9 +98,20 @@ void my_free(void *p)
 	struct MemEntry *ptr;
 	struct MemEntry *prev;
 	struct MemEntry *succ;
-	
+
 	int isMemEntry = 0;
 	ptr = (struct MemEntry*)big_block;
+	while (ptr != 0) {
+		// printf("ptr at memory address: %p\nTrying to free: %p\n\n",ptr,p);
+		if (p == (void*)ptr+sizeof(struct MemEntry)) {
+			isMemEntry = 1;
+			break;
+		}
+
+		ptr = ptr->succ;
+	}
+
+	ptr = (struct MemEntry*)little_block;
 	while (ptr != 0) {
 		// printf("ptr at memory address: %p\nTrying to free: %p\n\n",ptr,p);
 		if (p == (void*)ptr+sizeof(struct MemEntry)) {
