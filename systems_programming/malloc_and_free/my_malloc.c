@@ -19,7 +19,7 @@ void* my_malloc(unsigned int size)
 	
 	if(!initialized)	// 1st time called
 	{
-		printf("sizeof MemEntry: %zu\n",sizeof(struct MemEntry));
+		// printf("sizeof MemEntry: %zu\n",sizeof(struct MemEntry));
 		// create a root chunk at the beginning of the memory block
 		root = (struct MemEntry*)big_block;
 		root->prev = root->succ = 0;
@@ -63,6 +63,7 @@ void* my_malloc(unsigned int size)
 			if(p->succ != 0)
 				p->succ->prev = succ;
 			p->succ = succ;
+			succ->isfree = 1;
 			//end add
 			
 			succ->size = p->size - sizeof(struct MemEntry) - size;
@@ -134,9 +135,10 @@ void my_free(void *p)
 		ptr->isfree = 1;
 		prev = ptr;	// used for the step below
 	}
-	
+	// printf("%d\n",ptr->succ->isfree);
 	if((succ = ptr->succ) != 0 && succ->isfree)
 	{
+		// printf("Merging chunks of memory.\n");
 		// the next chunk is free, merge with it
 		prev->size += sizeof(struct MemEntry) + succ->size;
 		prev->isfree = 1;
