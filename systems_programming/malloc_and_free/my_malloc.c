@@ -5,8 +5,8 @@ static char big_block[BLOCKSIZE];
 
 struct MemEntry {
 	unsigned int size;
-	struct MemEntry *prev, *succ;
 	unsigned char isfree;
+	struct MemEntry *prev, *succ;
 };
 
 // return a pointer to the memory buffer requested
@@ -19,6 +19,7 @@ void* my_malloc(unsigned int size)
 	
 	if(!initialized)	// 1st time called
 	{
+		printf("sizeof MemEntry: %zu\n",sizeof(struct MemEntry));
 		// create a root chunk at the beginning of the memory block
 		root = (struct MemEntry*)big_block;
 		root->prev = root->succ = 0;
@@ -33,6 +34,11 @@ void* my_malloc(unsigned int size)
 		{
 			// the current chunk is smaller, go to the next chunk
 			p = p->succ;
+			// Check for saturation
+			if (p == 0) {
+				printf("Error: There is no memory chunk that can fit your data.\n");
+				return NULL;
+			}
 		}
 		else if(!p->isfree)
 		{
@@ -76,7 +82,7 @@ void my_free(void *p)
 
 	// Note: Maybe there's a better solution
 	if (p < (void*)big_block || p > ((void*)big_block + BLOCKSIZE)) {
-		fprintf(stderr,"Cannot free pointer that was not allocated "
+		fprintf(stderr,"Error: Cannot free pointer that was not allocated "
 					   "in file %s at line %d.\n",__FILE__,__LINE__);
 		return;
 	}
@@ -98,7 +104,7 @@ void my_free(void *p)
 	}
 
 	if (!isMemEntry) {
-		fprintf(stderr,"Cannot free pointer that was not returned by malloc "
+		fprintf(stderr,"Error: Cannot free pointer that was not returned by malloc "
 					   "in file %s at line %d.\n",__FILE__,__LINE__);
 		return;
 	}
@@ -106,7 +112,7 @@ void my_free(void *p)
 	ptr = (struct MemEntry*)((char*)p - sizeof(struct MemEntry));
 
 	if (ptr->isfree) {
-		fprintf(stderr,"Cannot free pointer that was already freed "
+		fprintf(stderr,"Error: Cannot free pointer that was already freed "
 					   "in file %s at line %d.\n",__FILE__,__LINE__);
 		return;
 	}

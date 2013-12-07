@@ -12,8 +12,12 @@ int main(int argc, char* argv[])
 	int x = 5;
 	free(&x);
 
+	// Test free twice
 	char *name = malloc(50);
-	free(name+10);
+	free(name);
+	free(name);
+
+	char *overflow = malloc(4976);
 
   	exit(0);
 }
