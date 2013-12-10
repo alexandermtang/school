@@ -7,18 +7,26 @@
 
 int main(int argc, char* argv[])
 {
-
-	// Test unallocated variable
+	// Test free()ing unallocated pointer
 	int x = 5;
 	free(&x);
 
-	// Test free twice
-	char *name = malloc(50);
-	free(name+10);
-	free(name);
-	free(name);
+	// Test free()ing pointer that wasn't allocated with malloc()
+	char *ptr = malloc(50);
+	free(ptr+10);
 
-	char *overflow = malloc(4976);
+  // Test redundant free()ing
+  free(ptr);
+  free(ptr);
+
+  // Test saturation
+  char *saturation = malloc(5000);
+
+  // Test fragmentation
+	char *big = malloc(4976);   // will be stored in big_block
+	char *little = malloc(199); // will be stored in little_block
+  free(big);
+  free(little);
 
   	exit(0);
 }

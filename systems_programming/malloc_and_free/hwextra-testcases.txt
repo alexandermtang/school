@@ -1,0 +1,20 @@
+// Test free()ing unallocated pointer
+int x = 5;
+free(&x);
+
+// Test free()ing pointer that wasn't allocated with malloc()
+char *ptr = malloc(50);
+free(ptr+10);
+
+// Test redundant free()ing
+free(ptr);
+free(ptr);
+
+// Test saturation
+char *saturation = malloc(5000);
+
+// Test fragmentation
+char *big = malloc(4976);   // will be stored in big_block
+char *little = malloc(199); // will be stored in little_block
+free(big);
+free(little);

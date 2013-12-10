@@ -43,7 +43,8 @@ void* my_malloc(unsigned int size)
 			p = p->succ;
 			// Check for saturation
 			if (p == 0) {
-				printf("Error: There is no memory chunk that can fit your data.\n");
+		    fprintf(stderr,"Error: There is no memory chunk that can fit your data "
+			    		         "in file %s at line %d.\n",__FILE__,__LINE__);
 				return NULL;
 			}
 		}
