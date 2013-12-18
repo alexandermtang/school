@@ -1,13 +1,13 @@
 # School
 
-Rutgers University
+## Rutgers University
+## CS 214, Systems Programming
 
-All my school projects.
-
-## Systems Programming
-
-### tokenizer/
-### sorted_list/
-### indexer/
+- tokenizer/
+- sorted_list/
+- indexer/
+- search/
+- multithreaded_book_order_system/
+- malloc_and_free/
 
 
