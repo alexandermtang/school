@@ -14,7 +14,16 @@ malloc_and_free.o: malloc_and_free.c
 	$(CC) $(CFLAGS) -c malloc_and_free.c
 
 clean:
-	-rm -rf *.o malloc_and_free *.dSYM
+	-rm -rf *.o malloc_and_free test *.dSYM
+
+build_test:
+	make my_malloc.o test.o test
+
+test.o:
+	$(CC) $(CFLAGS) -c test.c
+
+test: my_malloc.o
+	$(CC) $(CFLAGS) my_malloc.o test.o -o test
 
 rebuild:
 	make clean build
